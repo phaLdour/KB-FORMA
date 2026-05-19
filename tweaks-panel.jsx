@@ -1,568 +1,543 @@
+/* =============================================================================
+ * KB Spor — High-fidelity prototype tokens & base styles
+ * ============================================================================= */
 
-// tweaks-panel.jsx
-// Reusable Tweaks shell + form-control helpers.
-//
-// Owns the host protocol (listens for __activate_edit_mode / __deactivate_edit_mode,
-// posts __edit_mode_available / __edit_mode_set_keys / __edit_mode_dismissed) so
-// individual prototypes don't re-roll it. Ships a consistent set of controls so you
-// don't hand-draw <input type="range">, segmented radios, steppers, etc.
-//
-// Usage (in an HTML file that loads React + Babel):
-//
-//   const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
-//     "primaryColor": "#D97757",
-//     "palette": ["#D97757", "#29261b", "#f6f4ef"],
-//     "fontSize": 16,
-//     "density": "regular",
-//     "dark": false
-//   }/*EDITMODE-END*/;
-//
-//   function App() {
-//     const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
-//     return (
-//       <div style={{ fontSize: t.fontSize, color: t.primaryColor }}>
-//         Hello
-//         <TweaksPanel>
-//           <TweakSection label="Typography" />
-//           <TweakSlider label="Font size" value={t.fontSize} min={10} max={32} unit="px"
-//                        onChange={(v) => setTweak('fontSize', v)} />
-//           <TweakRadio  label="Density" value={t.density}
-//                        options={['compact', 'regular', 'comfy']}
-//                        onChange={(v) => setTweak('density', v)} />
-//           <TweakSection label="Theme" />
-//           <TweakColor  label="Primary" value={t.primaryColor}
-//                        options={['#D97757', '#2A6FDB', '#1F8A5B', '#7A5AE0']}
-//                        onChange={(v) => setTweak('primaryColor', v)} />
-//           <TweakColor  label="Palette" value={t.palette}
-//                        options={[['#D97757', '#29261b', '#f6f4ef'],
-//                                  ['#475569', '#0f172a', '#f1f5f9']]}
-//                        onChange={(v) => setTweak('palette', v)} />
-//           <TweakToggle label="Dark mode" value={t.dark}
-//                        onChange={(v) => setTweak('dark', v)} />
-//         </TweaksPanel>
-//       </div>
-//     );
-//   }
-//
-// ─────────────────────────────────────────────────────────────────────────────
+:root {
+  /* Spacing */
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
+  --space-5: 20px; --space-6: 24px; --space-8: 32px; --space-10: 40px;
+  --space-12: 48px; --space-14: 56px; --space-16: 64px; --space-20: 80px;
+  --space-24: 96px; --space-30: 120px;
 
-const __TWEAKS_STYLE = `
-  .twk-panel{position:fixed;right:16px;bottom:16px;z-index:2147483646;width:280px;
-    max-height:calc(100vh - 32px);display:flex;flex-direction:column;
-    transform:scale(var(--dc-inv-zoom,1));transform-origin:bottom right;
-    background:rgba(250,249,247,.78);color:#29261b;
-    -webkit-backdrop-filter:blur(24px) saturate(160%);backdrop-filter:blur(24px) saturate(160%);
-    border:.5px solid rgba(255,255,255,.6);border-radius:14px;
-    box-shadow:0 1px 0 rgba(255,255,255,.5) inset,0 12px 40px rgba(0,0,0,.18);
-    font:11.5px/1.4 ui-sans-serif,system-ui,-apple-system,sans-serif;overflow:hidden}
-  .twk-hd{display:flex;align-items:center;justify-content:space-between;
-    padding:10px 8px 10px 14px;cursor:move;user-select:none}
-  .twk-hd b{font-size:12px;font-weight:600;letter-spacing:.01em}
-  .twk-x{appearance:none;border:0;background:transparent;color:rgba(41,38,27,.55);
-    width:22px;height:22px;border-radius:6px;cursor:default;font-size:13px;line-height:1}
-  .twk-x:hover{background:rgba(0,0,0,.06);color:#29261b}
-  .twk-body{padding:2px 14px 14px;display:flex;flex-direction:column;gap:10px;
-    overflow-y:auto;overflow-x:hidden;min-height:0;
-    scrollbar-width:thin;scrollbar-color:rgba(0,0,0,.15) transparent}
-  .twk-body::-webkit-scrollbar{width:8px}
-  .twk-body::-webkit-scrollbar-track{background:transparent;margin:2px}
-  .twk-body::-webkit-scrollbar-thumb{background:rgba(0,0,0,.15);border-radius:4px;
-    border:2px solid transparent;background-clip:content-box}
-  .twk-body::-webkit-scrollbar-thumb:hover{background:rgba(0,0,0,.25);
-    border:2px solid transparent;background-clip:content-box}
-  .twk-row{display:flex;flex-direction:column;gap:5px}
-  .twk-row-h{flex-direction:row;align-items:center;justify-content:space-between;gap:10px}
-  .twk-lbl{display:flex;justify-content:space-between;align-items:baseline;
-    color:rgba(41,38,27,.72)}
-  .twk-lbl>span:first-child{font-weight:500}
-  .twk-val{color:rgba(41,38,27,.5);font-variant-numeric:tabular-nums}
+  /* Radii */
+  --radius-s: 6px; --radius-m: 12px; --radius-l: 20px; --radius-pill: 999px;
 
-  .twk-sect{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
-    color:rgba(41,38,27,.45);padding:10px 0 0}
-  .twk-sect:first-child{padding-top:0}
+  /* Type */
+  --font-sans: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+  --font-display: 'Playfair Display', 'Cormorant Garamond', Georgia, serif;
+  --font-serif: 'Cormorant Garamond', Georgia, serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  .twk-field{appearance:none;box-sizing:border-box;width:100%;min-width:0;height:26px;padding:0 8px;
-    border:.5px solid rgba(0,0,0,.1);border-radius:7px;
-    background:rgba(255,255,255,.6);color:inherit;font:inherit;outline:none}
-  .twk-field:focus{border-color:rgba(0,0,0,.25);background:rgba(255,255,255,.85)}
-  select.twk-field{padding-right:22px;
-    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path fill='rgba(0,0,0,.5)' d='M0 0h10L5 6z'/></svg>");
-    background-repeat:no-repeat;background-position:right 8px center}
+  /* Motion */
+  --d-instant: 0ms;
+  --d-fast: 150ms; --d-base: 300ms; --d-slow: 600ms; --d-hero: 900ms;
+  --ease-standard: cubic-bezier(0.2, 0.6, 0.2, 1);
+  --ease-decel: cubic-bezier(0, 0, 0.2, 1);
+  --ease-accel: cubic-bezier(0.4, 0, 1, 1);
 
-  .twk-slider{appearance:none;-webkit-appearance:none;width:100%;height:4px;margin:6px 0;
-    border-radius:999px;background:rgba(0,0,0,.12);outline:none}
-  .twk-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
-    width:14px;height:14px;border-radius:50%;background:#fff;
-    border:.5px solid rgba(0,0,0,.12);box-shadow:0 1px 3px rgba(0,0,0,.2);cursor:default}
-  .twk-slider::-moz-range-thumb{width:14px;height:14px;border-radius:50%;
-    background:#fff;border:.5px solid rgba(0,0,0,.12);box-shadow:0 1px 3px rgba(0,0,0,.2);cursor:default}
-
-  .twk-seg{position:relative;display:flex;padding:2px;border-radius:8px;
-    background:rgba(0,0,0,.06);user-select:none}
-  .twk-seg-thumb{position:absolute;top:2px;bottom:2px;border-radius:6px;
-    background:rgba(255,255,255,.9);box-shadow:0 1px 2px rgba(0,0,0,.12);
-    transition:left .15s cubic-bezier(.3,.7,.4,1),width .15s}
-  .twk-seg.dragging .twk-seg-thumb{transition:none}
-  .twk-seg button{appearance:none;position:relative;z-index:1;flex:1;border:0;
-    background:transparent;color:inherit;font:inherit;font-weight:500;min-height:22px;
-    border-radius:6px;cursor:default;padding:4px 6px;line-height:1.2;
-    overflow-wrap:anywhere}
-
-  .twk-toggle{position:relative;width:32px;height:18px;border:0;border-radius:999px;
-    background:rgba(0,0,0,.15);transition:background .15s;cursor:default;padding:0}
-  .twk-toggle[data-on="1"]{background:#34c759}
-  .twk-toggle i{position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;
-    background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:transform .15s}
-  .twk-toggle[data-on="1"] i{transform:translateX(14px)}
-
-  .twk-num{display:flex;align-items:center;box-sizing:border-box;min-width:0;height:26px;padding:0 0 0 8px;
-    border:.5px solid rgba(0,0,0,.1);border-radius:7px;background:rgba(255,255,255,.6)}
-  .twk-num-lbl{font-weight:500;color:rgba(41,38,27,.6);cursor:ew-resize;
-    user-select:none;padding-right:8px}
-  .twk-num input{flex:1;min-width:0;height:100%;border:0;background:transparent;
-    font:inherit;font-variant-numeric:tabular-nums;text-align:right;padding:0 8px 0 0;
-    outline:none;color:inherit;-moz-appearance:textfield}
-  .twk-num input::-webkit-inner-spin-button,.twk-num input::-webkit-outer-spin-button{
-    -webkit-appearance:none;margin:0}
-  .twk-num-unit{padding-right:8px;color:rgba(41,38,27,.45)}
-
-  .twk-btn{appearance:none;height:26px;padding:0 12px;border:0;border-radius:7px;
-    background:rgba(0,0,0,.78);color:#fff;font:inherit;font-weight:500;cursor:default}
-  .twk-btn:hover{background:rgba(0,0,0,.88)}
-  .twk-btn.secondary{background:rgba(0,0,0,.06);color:inherit}
-  .twk-btn.secondary:hover{background:rgba(0,0,0,.1)}
-
-  .twk-swatch{appearance:none;-webkit-appearance:none;width:56px;height:22px;
-    border:.5px solid rgba(0,0,0,.1);border-radius:6px;padding:0;cursor:default;
-    background:transparent;flex-shrink:0}
-  .twk-swatch::-webkit-color-swatch-wrapper{padding:0}
-  .twk-swatch::-webkit-color-swatch{border:0;border-radius:5.5px}
-  .twk-swatch::-moz-color-swatch{border:0;border-radius:5.5px}
-
-  .twk-chips{display:flex;gap:6px}
-  .twk-chip{position:relative;appearance:none;flex:1;min-width:0;height:46px;
-    padding:0;border:0;border-radius:6px;overflow:hidden;cursor:default;
-    box-shadow:0 0 0 .5px rgba(0,0,0,.12),0 1px 2px rgba(0,0,0,.06);
-    transition:transform .12s cubic-bezier(.3,.7,.4,1),box-shadow .12s}
-  .twk-chip:hover{transform:translateY(-1px);
-    box-shadow:0 0 0 .5px rgba(0,0,0,.18),0 4px 10px rgba(0,0,0,.12)}
-  .twk-chip[data-on="1"]{box-shadow:0 0 0 1.5px rgba(0,0,0,.85),
-    0 2px 6px rgba(0,0,0,.15)}
-  .twk-chip>span{position:absolute;top:0;bottom:0;right:0;width:34%;
-    display:flex;flex-direction:column;box-shadow:-1px 0 0 rgba(0,0,0,.1)}
-  .twk-chip>span>i{flex:1;box-shadow:0 -1px 0 rgba(0,0,0,.1)}
-  .twk-chip>span>i:first-child{box-shadow:none}
-  .twk-chip svg{position:absolute;top:6px;left:6px;width:13px;height:13px;
-    filter:drop-shadow(0 1px 1px rgba(0,0,0,.3))}
-`;
-
-// ── useTweaks ───────────────────────────────────────────────────────────────
-// Single source of truth for tweak values. setTweak persists via the host
-// (__edit_mode_set_keys → host rewrites the EDITMODE block on disk).
-function useTweaks(defaults) {
-  const [values, setValues] = React.useState(defaults);
-  // Accepts either setTweak('key', value) or setTweak({ key: value, ... }) so a
-  // useState-style call doesn't write a "[object Object]" key into the persisted
-  // JSON block.
-  const setTweak = React.useCallback((keyOrEdits, val) => {
-    const edits = typeof keyOrEdits === 'object' && keyOrEdits !== null
-      ? keyOrEdits : { [keyOrEdits]: val };
-    setValues((prev) => ({ ...prev, ...edits }));
-    window.parent.postMessage({ type: '__edit_mode_set_keys', edits }, '*');
-    // Same-window signal so in-page listeners (deck-stage rail thumbnails)
-    // can react — the parent message only reaches the host, not peers.
-    window.dispatchEvent(new CustomEvent('tweakchange', { detail: edits }));
-  }, []);
-  return [values, setTweak];
+  --maxw: 1440px;
+  --gut: clamp(20px, 4vw, 56px);
 }
 
-// ── TweaksPanel ─────────────────────────────────────────────────────────────
-// Floating shell. Registers the protocol listener BEFORE announcing
-// availability — if the announce ran first, the host's activate could land
-// before our handler exists and the toolbar toggle would silently no-op.
-// The close button posts __edit_mode_dismissed so the host's toolbar toggle
-// flips off in lockstep; the host echoes __deactivate_edit_mode back which
-// is what actually hides the panel.
-function TweaksPanel({ title = 'Tweaks', noDeckControls = false, children }) {
-  const [open, setOpen] = React.useState(false);
-  const dragRef = React.useRef(null);
-  // Auto-inject a rail toggle when a <deck-stage> is on the page. The
-  // toggle drives the deck's per-viewer _railVisible via window message;
-  // state is mirrored from the same localStorage key the deck reads so
-  // the control reflects reality across reloads. The mechanism is the
-  // message — authors who want custom placement can post it directly
-  // and pass noDeckControls to suppress this one.
-  const hasDeckStage = React.useMemo(
-    () => typeof document !== 'undefined' && !!document.querySelector('deck-stage'),
-    [],
-  );
-  // deck-stage enables its rail in connectedCallback, but this panel can
-  // mount before that element has upgraded. The initial read catches the
-  // common case; the listener covers mounting first. (Older deck-stage.js
-  // copies still wait for the host's __omelette_rail_enabled postMessage —
-  // same listener handles those.)
-  const [railEnabled, setRailEnabled] = React.useState(
-    () => hasDeckStage && !!document.querySelector('deck-stage')?._railEnabled,
-  );
-  React.useEffect(() => {
-    if (!hasDeckStage || railEnabled) return undefined;
-    const onMsg = (e) => {
-      if (e.data && e.data.type === '__omelette_rail_enabled') setRailEnabled(true);
-    };
-    window.addEventListener('message', onMsg);
-    return () => window.removeEventListener('message', onMsg);
-  }, [hasDeckStage, railEnabled]);
-  const [railVisible, setRailVisible] = React.useState(() => {
-    try { return localStorage.getItem('deck-stage.railVisible') !== '0'; } catch (e) { return true; }
-  });
-  const toggleRail = (on) => {
-    setRailVisible(on);
-    window.postMessage({ type: '__deck_rail_visible', on }, '*');
-  };
-  const offsetRef = React.useRef({ x: 16, y: 16 });
-  const PAD = 16;
-
-  const clampToViewport = React.useCallback(() => {
-    const panel = dragRef.current;
-    if (!panel) return;
-    const w = panel.offsetWidth, h = panel.offsetHeight;
-    const maxRight = Math.max(PAD, window.innerWidth - w - PAD);
-    const maxBottom = Math.max(PAD, window.innerHeight - h - PAD);
-    offsetRef.current = {
-      x: Math.min(maxRight, Math.max(PAD, offsetRef.current.x)),
-      y: Math.min(maxBottom, Math.max(PAD, offsetRef.current.y)),
-    };
-    panel.style.right = offsetRef.current.x + 'px';
-    panel.style.bottom = offsetRef.current.y + 'px';
-  }, []);
-
-  React.useEffect(() => {
-    if (!open) return;
-    clampToViewport();
-    if (typeof ResizeObserver === 'undefined') {
-      window.addEventListener('resize', clampToViewport);
-      return () => window.removeEventListener('resize', clampToViewport);
-    }
-    const ro = new ResizeObserver(clampToViewport);
-    ro.observe(document.documentElement);
-    return () => ro.disconnect();
-  }, [open, clampToViewport]);
-
-  React.useEffect(() => {
-    const onMsg = (e) => {
-      const t = e?.data?.type;
-      if (t === '__activate_edit_mode') setOpen(true);
-      else if (t === '__deactivate_edit_mode') setOpen(false);
-    };
-    window.addEventListener('message', onMsg);
-    window.parent.postMessage({ type: '__edit_mode_available' }, '*');
-    return () => window.removeEventListener('message', onMsg);
-  }, []);
-
-  const dismiss = () => {
-    setOpen(false);
-    window.parent.postMessage({ type: '__edit_mode_dismissed' }, '*');
-  };
-
-  const onDragStart = (e) => {
-    const panel = dragRef.current;
-    if (!panel) return;
-    const r = panel.getBoundingClientRect();
-    const sx = e.clientX, sy = e.clientY;
-    const startRight = window.innerWidth - r.right;
-    const startBottom = window.innerHeight - r.bottom;
-    const move = (ev) => {
-      offsetRef.current = {
-        x: startRight - (ev.clientX - sx),
-        y: startBottom - (ev.clientY - sy),
-      };
-      clampToViewport();
-    };
-    const up = () => {
-      window.removeEventListener('mousemove', move);
-      window.removeEventListener('mouseup', up);
-    };
-    window.addEventListener('mousemove', move);
-    window.addEventListener('mouseup', up);
-  };
-
-  if (!open) return null;
-  return (
-    <>
-      <style>{__TWEAKS_STYLE}</style>
-      <div ref={dragRef} className="twk-panel" data-noncommentable=""
-           style={{ right: offsetRef.current.x, bottom: offsetRef.current.y }}>
-        <div className="twk-hd" onMouseDown={onDragStart}>
-          <b>{title}</b>
-          <button className="twk-x" aria-label="Close tweaks"
-                  onMouseDown={(e) => e.stopPropagation()}
-                  onClick={dismiss}>✕</button>
-        </div>
-        <div className="twk-body">
-          {children}
-          {hasDeckStage && railEnabled && !noDeckControls && (
-            <TweakSection label="Deck">
-              <TweakToggle label="Thumbnail rail" value={railVisible} onChange={toggleRail} />
-            </TweakSection>
-          )}
-        </div>
-      </div>
-    </>
-  );
+/* ---------- KINETIC (default) — KB Spor root + global -------------------- */
+:root,
+[data-mood='kinetic'] {
+  --bg: #0a0a0b;
+  --bg-2: #0f0f12;
+  --surface: #15151a;
+  --surface-2: #1c1c22;
+  --line: rgba(255, 255, 255, 0.08);
+  --line-2: rgba(255, 255, 255, 0.16);
+  --text: #f6f6f8;
+  --muted: #8b8b94;
+  --dim: #5a5a62;
+  --accent: #ff4d2e;
+  --accent-2: #ff7a55;
+  --accent-soft: rgba(255, 77, 46, 0.12);
+  --focus-ring: var(--accent);
 }
 
-// ── Layout helpers ──────────────────────────────────────────────────────────
-
-function TweakSection({ label, children }) {
-  return (
-    <>
-      <div className="twk-sect">{label}</div>
-      {children}
-    </>
-  );
+/* ---------- FUTBOL — pitch energy, deep grass green undertone ----------- */
+[data-mood='futbol'] {
+  --bg: #07090a;
+  --bg-2: #0c1110;
+  --surface: #11181a;
+  --surface-2: #182123;
+  --line: rgba(255, 255, 255, 0.07);
+  --line-2: rgba(255, 255, 255, 0.18);
+  --text: #f4f7f4;
+  --muted: #889089;
+  --dim: #4f5a52;
+  --accent: #ff4d2e;
+  --accent-2: #ffa500;
+  --pitch: #2dbf64;
+  --pitch-line: rgba(255, 255, 255, 0.22);
+  --accent-soft: rgba(255, 77, 46, 0.14);
+  --focus-ring: var(--accent);
 }
 
-function TweakRow({ label, value, children, inline = false }) {
-  return (
-    <div className={inline ? 'twk-row twk-row-h' : 'twk-row'}>
-      <div className="twk-lbl">
-        <span>{label}</span>
-        {value != null && <span className="twk-val">{value}</span>}
-      </div>
-      {children}
-    </div>
-  );
+/* ---------- BASKET — parquet warmth, electric secondary ----------------- */
+[data-mood='basket'] {
+  --bg: #08080a;
+  --bg-2: #0e0c10;
+  --surface: #181318;
+  --surface-2: #211a20;
+  --line: rgba(255, 255, 255, 0.07);
+  --line-2: rgba(255, 255, 255, 0.18);
+  --text: #f7f4f0;
+  --muted: #968a82;
+  --dim: #5a4e46;
+  --accent: #ff7a23;            /* basketball leather */
+  --accent-2: #00d4ff;          /* electric secondary */
+  --parquet: #c08a4c;
+  --parquet-2: #8a5a2e;
+  --accent-soft: rgba(255, 122, 35, 0.14);
+  --focus-ring: var(--accent);
 }
 
-// ── Controls ────────────────────────────────────────────────────────────────
-
-function TweakSlider({ label, value, min = 0, max = 100, step = 1, unit = '', onChange }) {
-  return (
-    <TweakRow label={label} value={`${value}${unit}`}>
-      <input type="range" className="twk-slider" min={min} max={max} step={step}
-             value={value} onChange={(e) => onChange(Number(e.target.value))} />
-    </TweakRow>
-  );
+/* ---------- EDITORIAL — Maison KB Classic ------------------------------- */
+[data-mood='editorial'] {
+  --bg: #050403;
+  --bg-2: #0d0904;
+  --surface: #110a04;
+  --surface-2: #1a0f04;
+  --line: rgba(212, 175, 55, 0.18);
+  --line-2: rgba(212, 175, 55, 0.36);
+  --text: #ebd9a7;
+  --muted: #a1936c;
+  --dim: #6b5a36;
+  --accent: #d4af37;
+  --accent-2: #f3d27a;
+  --gold-deep: #8a6a1f;
+  --accent-soft: rgba(212, 175, 55, 0.12);
+  --focus-ring: var(--accent-2);
 }
 
-function TweakToggle({ label, value, onChange }) {
-  return (
-    <div className="twk-row twk-row-h">
-      <div className="twk-lbl"><span>{label}</span></div>
-      <button type="button" className="twk-toggle" data-on={value ? '1' : '0'}
-              role="switch" aria-checked={!!value}
-              onClick={() => onChange(!value)}><i /></button>
-    </div>
-  );
+/* ---------- LAB — KB.LAB builder, HUD ----------------------------------- */
+[data-mood='lab'] {
+  --bg: #06080c;
+  --bg-2: #0a0d14;
+  --surface: rgba(0, 240, 255, 0.04);
+  --surface-2: rgba(0, 240, 255, 0.08);
+  --line: rgba(0, 240, 255, 0.20);
+  --line-2: rgba(0, 240, 255, 0.36);
+  --grid: rgba(0, 240, 255, 0.07);
+  --text: #e6f7ff;
+  --muted: rgba(230, 247, 255, 0.62);
+  --dim: rgba(230, 247, 255, 0.36);
+  --accent: #00f0ff;
+  --accent-2: #b1ff5b;
+  --magenta: #ff2e9c;
+  --accent-soft: rgba(0, 240, 255, 0.10);
+  --focus-ring: var(--accent);
 }
 
-function TweakRadio({ label, value, options, onChange }) {
-  const trackRef = React.useRef(null);
-  const [dragging, setDragging] = React.useState(false);
-  // The active value is read by pointer-move handlers attached for the lifetime
-  // of a drag — ref it so a stale closure doesn't fire onChange for every move.
-  const valueRef = React.useRef(value);
-  valueRef.current = value;
+/* =============================================================================
+ *  Reset & base
+ * ============================================================================= */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; background: #000; }
+body {
+  font-family: var(--font-sans);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.55;
+  min-height: 100vh;
+  overflow-x: hidden;
+  transition: background var(--d-slow) var(--ease-standard), color var(--d-slow) var(--ease-standard);
+}
+img, svg { display: block; max-width: 100%; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { background: none; border: 0; padding: 0; cursor: pointer; color: inherit; }
+a { color: inherit; text-decoration: none; }
+input, textarea, select { outline: none; background: transparent; border: 0; }
+::selection { background: var(--accent); color: var(--bg); }
 
-  // Segments wrap mid-word once per-segment width runs out. The track is
-  // ~248px (280 panel − 28 body pad − 4 seg pad), each button loses 12px
-  // to its own padding, and 11.5px system-ui averages ~6.3px/char — so 2
-  // options fit ~16 chars each, 3 fit ~10. Past that (or >3 options), fall
-  // back to a dropdown rather than wrap.
-  const labelLen = (o) => String(typeof o === 'object' ? o.label : o).length;
-  const maxLen = options.reduce((m, o) => Math.max(m, labelLen(o)), 0);
-  const fitsAsSegments = maxLen <= ({ 2: 16, 3: 10 }[options.length] ?? 0);
-  if (!fitsAsSegments) {
-    // <select> emits strings — map back to the original option value so the
-    // fallback stays type-preserving (numbers, booleans) like the segment path.
-    const resolve = (s) => {
-      const m = options.find((o) => String(typeof o === 'object' ? o.value : o) === s);
-      return m === undefined ? s : typeof m === 'object' ? m.value : m;
-    };
-    return <TweakSelect label={label} value={value} options={options}
-                        onChange={(s) => onChange(resolve(s))} />;
-  }
-  const opts = options.map((o) => (typeof o === 'object' ? o : { value: o, label: o }));
-  const idx = Math.max(0, opts.findIndex((o) => o.value === value));
-  const n = opts.length;
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,.08); border-radius: 6px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,.18); }
 
-  const segAt = (clientX) => {
-    const r = trackRef.current.getBoundingClientRect();
-    const inner = r.width - 4;
-    const i = Math.floor(((clientX - r.left - 2) / inner) * n);
-    return opts[Math.max(0, Math.min(n - 1, i))].value;
-  };
+/* =============================================================================
+ *  Type utilities
+ * ============================================================================= */
+.eyebrow {
+  font: 600 11px/1.2 var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.24em;
+  color: var(--muted);
+}
+.eyebrow .eyebrow-dot {
+  display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+  background: var(--accent); margin-right: 10px;
+  vertical-align: middle; transform: translateY(-1px);
+  animation: pulse 2.4s var(--ease-standard) infinite;
+}
+.h-display { font: 800 clamp(56px, 9.5vw, 156px)/0.9 var(--font-display); letter-spacing: -0.045em; margin: 0; }
+.h-1 { font: 700 clamp(40px, 6vw, 84px)/0.98 var(--font-display); letter-spacing: -0.035em; margin: 0; }
+.h-2 { font: 700 clamp(28px, 3.8vw, 50px)/1.05 var(--font-display); letter-spacing: -0.025em; margin: 0; }
+.h-3 { font: 700 clamp(20px, 2vw, 28px)/1.15 var(--font-display); letter-spacing: -0.01em; margin: 0; }
+.h-4 { font: 700 clamp(16px, 1.4vw, 20px)/1.2 var(--font-sans); margin: 0; }
+.italic-display { font-family: var(--font-display); font-style: italic; font-weight: 400; }
+.mono { font-family: var(--font-mono); letter-spacing: 0.04em; }
+.muted { color: var(--muted); }
+.dim { color: var(--dim); }
+.text-micro { font: 600 10px/1.2 var(--font-mono); letter-spacing: 0.2em; text-transform: uppercase; }
+.text-caption { font-size: 12px; line-height: 1.4; }
+.text-small { font-size: 14px; line-height: 1.55; }
+.text-body { font-size: 16px; line-height: 1.65; }
+.text-lead { font-size: clamp(17px, 1.4vw, 20px); line-height: 1.6; }
 
-  const onPointerDown = (e) => {
-    setDragging(true);
-    const v0 = segAt(e.clientX);
-    if (v0 !== valueRef.current) onChange(v0);
-    const move = (ev) => {
-      if (!trackRef.current) return;
-      const v = segAt(ev.clientX);
-      if (v !== valueRef.current) onChange(v);
-    };
-    const up = () => {
-      setDragging(false);
-      window.removeEventListener('pointermove', move);
-      window.removeEventListener('pointerup', up);
-    };
-    window.addEventListener('pointermove', move);
-    window.addEventListener('pointerup', up);
-  };
+/* =============================================================================
+ *  Layout
+ * ============================================================================= */
+.container { max-width: var(--maxw); margin: 0 auto; padding: 0 var(--gut); }
+.stack > * + * { margin-top: var(--gap, var(--space-4)); }
+.row { display: flex; align-items: center; gap: var(--space-3); }
+.divider { height: 1px; background: var(--line); border: 0; margin: 0; }
+.divider-v { width: 1px; background: var(--line); align-self: stretch; }
+.full-bleed { width: 100vw; margin-left: calc(50% - 50vw); }
 
-  return (
-    <TweakRow label={label}>
-      <div ref={trackRef} role="radiogroup" onPointerDown={onPointerDown}
-           className={dragging ? 'twk-seg dragging' : 'twk-seg'}>
-        <div className="twk-seg-thumb"
-             style={{ left: `calc(2px + ${idx} * (100% - 4px) / ${n})`,
-                      width: `calc((100% - 4px) / ${n})` }} />
-        {opts.map((o) => (
-          <button key={o.value} type="button" role="radio" aria-checked={o.value === value}>
-            {o.label}
-          </button>
-        ))}
-      </div>
-    </TweakRow>
-  );
+/* =============================================================================
+ *  Buttons
+ * ============================================================================= */
+.btn {
+  display: inline-flex; align-items: center; gap: 10px;
+  height: 48px; padding: 0 22px;
+  border-radius: var(--radius-m);
+  font: 600 14px/1 var(--font-sans);
+  letter-spacing: 0.01em;
+  transition: all var(--d-fast) var(--ease-standard);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn-primary { background: var(--accent); color: var(--bg); }
+.btn-primary:hover { background: var(--accent-2); transform: translateY(-1px); }
+.btn-ghost { background: transparent; color: var(--text); border: 1px solid var(--line); }
+.btn-ghost:hover { border-color: var(--line-2); background: var(--surface); }
+.btn-quiet { color: var(--text); padding: 0; height: auto; gap: 6px; }
+.btn-quiet:hover { color: var(--accent); }
+.btn-quiet .arrow { transition: transform var(--d-fast); }
+.btn-quiet:hover .arrow { transform: translateX(3px); }
+.btn-sm { height: 36px; padding: 0 14px; font-size: 12px; }
+.btn-lg { height: 56px; padding: 0 28px; font-size: 15px; }
+
+/* =============================================================================
+ *  Pill / chip
+ * ============================================================================= */
+.pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 28px; padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  font: 600 11px/1 var(--font-mono);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: var(--bg-2);
+  transition: all var(--d-fast);
+  cursor: pointer;
+}
+.pill:hover { color: var(--text); border-color: var(--line-2); }
+.pill.is-active { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
+
+/* =============================================================================
+ *  Card — generic
+ * ============================================================================= */
+.card {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  transition: border-color var(--d-fast), background var(--d-fast);
+}
+.card:hover { border-color: var(--line-2); }
+
+/* =============================================================================
+ *  Marquee
+ * ============================================================================= */
+.marquee {
+  overflow: hidden;
+  border-block: 1px solid var(--line);
+  background: var(--bg);
+  padding: 14px 0;
+}
+.marquee-track {
+  display: inline-flex; align-items: center; gap: 48px;
+  white-space: nowrap;
+  animation: marquee 38s linear infinite;
+  font: 600 11px/1 var(--font-mono);
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.marquee-track .dot { color: var(--dim); }
+.marquee-track .hi { color: var(--accent); }
+@keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+@keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+@keyframes fade-up { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Start visible — animation is enhancement only so reduced-motion users still
+ * see content. Each route mount re-triggers the animation via React key prop. */
+.fade-up { opacity: 1; animation: fade-up var(--d-slow) var(--ease-decel) both; }
+.fade-in { opacity: 1; animation: fade-in var(--d-slow) var(--ease-decel) both; }
+@media (prefers-reduced-motion: reduce) {
+  .fade-up, .fade-in { animation: none; }
 }
 
-function TweakSelect({ label, value, options, onChange }) {
-  return (
-    <TweakRow label={label}>
-      <select className="twk-field" value={value} onChange={(e) => onChange(e.target.value)}>
-        {options.map((o) => {
-          const v = typeof o === 'object' ? o.value : o;
-          const l = typeof o === 'object' ? o.label : o;
-          return <option key={v} value={v}>{l}</option>;
-        })}
-      </select>
-    </TweakRow>
-  );
+/* =============================================================================
+ *  Decorative backgrounds — one per mood, applied to a hub's hero
+ * ============================================================================= */
+.bg-grid {
+  background-image:
+    linear-gradient(to right, var(--line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--line) 1px, transparent 1px);
+  background-size: 48px 48px;
+  opacity: 0.5;
 }
-
-function TweakText({ label, value, placeholder, onChange }) {
-  return (
-    <TweakRow label={label}>
-      <input className="twk-field" type="text" value={value} placeholder={placeholder}
-             onChange={(e) => onChange(e.target.value)} />
-    </TweakRow>
-  );
+.bg-floodlight {
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(255, 240, 200, 0.10), transparent 60%),
+    radial-gradient(ellipse 60% 50% at 50% 100%, rgba(45, 191, 100, 0.06), transparent 60%);
 }
-
-function TweakNumber({ label, value, min, max, step = 1, unit = '', onChange }) {
-  const clamp = (n) => {
-    if (min != null && n < min) return min;
-    if (max != null && n > max) return max;
-    return n;
-  };
-  const startRef = React.useRef({ x: 0, val: 0 });
-  const onScrubStart = (e) => {
-    e.preventDefault();
-    startRef.current = { x: e.clientX, val: value };
-    const decimals = (String(step).split('.')[1] || '').length;
-    const move = (ev) => {
-      const dx = ev.clientX - startRef.current.x;
-      const raw = startRef.current.val + dx * step;
-      const snapped = Math.round(raw / step) * step;
-      onChange(clamp(Number(snapped.toFixed(decimals))));
-    };
-    const up = () => {
-      window.removeEventListener('pointermove', move);
-      window.removeEventListener('pointerup', up);
-    };
-    window.addEventListener('pointermove', move);
-    window.addEventListener('pointerup', up);
-  };
-  return (
-    <div className="twk-num">
-      <span className="twk-num-lbl" onPointerDown={onScrubStart}>{label}</span>
-      <input type="number" value={value} min={min} max={max} step={step}
-             onChange={(e) => onChange(clamp(Number(e.target.value)))} />
-      {unit && <span className="twk-num-unit">{unit}</span>}
-    </div>
-  );
+.bg-pitch-lines {
+  background-image:
+    /* center circle */
+    radial-gradient(circle at 50% 50%, transparent 95px, var(--pitch-line) 95px, var(--pitch-line) 96px, transparent 97px),
+    /* center spot */
+    radial-gradient(circle at 50% 50%, var(--pitch-line) 2px, transparent 3px),
+    /* horizontal center line */
+    linear-gradient(to bottom, transparent calc(50% - 0.5px), var(--pitch-line) calc(50% - 0.5px), var(--pitch-line) calc(50% + 0.5px), transparent calc(50% + 0.5px));
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  background-position: center;
 }
-
-// Relative-luminance contrast pick — checkmarks drawn over a swatch need to
-// read on both #111 and #fafafa without per-option configuration. Hex input
-// only (#rgb / #rrggbb); named or rgb()/hsl() colors fall through to "light".
-function __twkIsLight(hex) {
-  const h = String(hex).replace('#', '');
-  const x = h.length === 3 ? h.replace(/./g, (c) => c + c) : h.padEnd(6, '0');
-  const n = parseInt(x.slice(0, 6), 16);
-  if (Number.isNaN(n)) return true;
-  const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
-  return r * 299 + g * 587 + b * 114 > 148000;
-}
-
-const __TwkCheck = ({ light }) => (
-  <svg viewBox="0 0 14 14" aria-hidden="true">
-    <path d="M3 7.2 5.8 10 11 4.2" fill="none" strokeWidth="2.2"
-          strokeLinecap="round" strokeLinejoin="round"
-          stroke={light ? 'rgba(0,0,0,.78)' : '#fff'} />
-  </svg>
-);
-
-// TweakColor — curated color/palette picker. Each option is either a single
-// hex string or an array of 1-5 hex strings; the card adapts — a lone color
-// renders solid, a palette renders colors[0] as the hero (left ~2/3) with the
-// rest stacked in a sharp column on the right. onChange emits the
-// option in the shape it was passed (string stays string, array stays array).
-// Without options it falls back to the native color input for back-compat.
-function TweakColor({ label, value, options, onChange }) {
-  if (!options || !options.length) {
-    return (
-      <div className="twk-row twk-row-h">
-        <div className="twk-lbl"><span>{label}</span></div>
-        <input type="color" className="twk-swatch" value={value}
-               onChange={(e) => onChange(e.target.value)} />
-      </div>
+.bg-parquet {
+  background:
+    repeating-linear-gradient(
+      90deg,
+      rgba(192, 138, 76, 0.06) 0 6px,
+      rgba(138, 90, 46, 0.06) 6px 12px,
+      rgba(192, 138, 76, 0.08) 12px 14px,
+      rgba(138, 90, 46, 0.04) 14px 22px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      transparent 0 48px,
+      rgba(255, 255, 255, 0.04) 48px 49px
     );
-  }
-  // Native <input type=color> emits lowercase hex per the HTML spec, so
-  // compare case-insensitively. String() guards JSON.stringify(undefined),
-  // which returns the primitive undefined (no .toLowerCase).
-  const key = (o) => String(JSON.stringify(o)).toLowerCase();
-  const cur = key(value);
-  return (
-    <TweakRow label={label}>
-      <div className="twk-chips" role="radiogroup">
-        {options.map((o, i) => {
-          const colors = Array.isArray(o) ? o : [o];
-          const [hero, ...rest] = colors;
-          const sup = rest.slice(0, 4);
-          const on = key(o) === cur;
-          return (
-            <button key={i} type="button" className="twk-chip" role="radio"
-                    aria-checked={on} data-on={on ? '1' : '0'}
-                    aria-label={colors.join(', ')} title={colors.join(' · ')}
-                    style={{ background: hero }}
-                    onClick={() => onChange(o)}>
-              {sup.length > 0 && (
-                <span>
-                  {sup.map((c, j) => <i key={j} style={{ background: c }} />)}
-                </span>
-              )}
-              {on && <__TwkCheck light={__twkIsLight(hero)} />}
-            </button>
-          );
-        })}
-      </div>
-    </TweakRow>
-  );
+}
+.bg-lab-grid {
+  background-image:
+    linear-gradient(to right, var(--grid) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+.bg-luxe-vignette {
+  background:
+    radial-gradient(ellipse at center, rgba(212, 175, 55, 0.06), transparent 50%),
+    radial-gradient(ellipse at bottom right, rgba(212, 175, 55, 0.03), transparent 70%);
 }
 
-function TweakButton({ label, onClick, secondary = false }) {
-  return (
-    <button type="button" className={secondary ? 'twk-btn secondary' : 'twk-btn'}
-            onClick={onClick}>{label}</button>
-  );
+/* =============================================================================
+ *  Cinematic page transition overlay
+ * ============================================================================= */
+.transition-overlay {
+  position: fixed; inset: 0; z-index: 1000;
+  pointer-events: none;
+  display: grid; place-items: center;
+  background: transparent;
+}
+.transition-overlay .panel {
+  position: absolute; inset: 0;
+  background: var(--panel-color, #000);
+  transform: scaleY(0);
+  transform-origin: bottom;
+}
+.transition-overlay.is-entering .panel {
+  animation: t-enter 600ms cubic-bezier(0.7, 0, 0.3, 1) forwards;
+}
+.transition-overlay.is-exiting .panel {
+  animation: t-exit 600ms cubic-bezier(0.7, 0, 0.3, 1) forwards;
+}
+.transition-overlay .label {
+  position: relative; z-index: 2;
+  opacity: 0;
+  font: 800 clamp(42px, 8vw, 110px)/1 var(--font-display);
+  letter-spacing: -0.04em;
+  color: var(--panel-text, #fff);
+  text-align: center;
+}
+.transition-overlay.is-entering .label { animation: t-label 600ms 80ms var(--ease-decel) forwards; }
+.transition-overlay .sublabel {
+  position: absolute; bottom: 10vh; left: 0; right: 0;
+  text-align: center;
+  font: 600 11px/1 var(--font-mono);
+  letter-spacing: 0.32em; text-transform: uppercase;
+  color: var(--panel-text, #fff);
+  opacity: 0;
+}
+.transition-overlay.is-entering .sublabel { animation: t-label 600ms 180ms var(--ease-decel) forwards; }
+
+@keyframes t-enter {
+  0% { transform: scaleY(0); transform-origin: bottom; }
+  100% { transform: scaleY(1); transform-origin: bottom; }
+}
+@keyframes t-exit {
+  0% { transform: scaleY(1); transform-origin: top; }
+  100% { transform: scaleY(0); transform-origin: top; }
+}
+@keyframes t-label {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
 }
 
-Object.assign(window, {
-  useTweaks, TweaksPanel, TweakSection, TweakRow,
-  TweakSlider, TweakToggle, TweakRadio, TweakSelect,
-  TweakText, TweakNumber, TweakColor, TweakButton,
-});
+/* =============================================================================
+ *  Header
+ * ============================================================================= */
+.site-header {
+  position: sticky; top: 0; z-index: 50;
+  background: color-mix(in oklab, var(--bg) 80%, transparent);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  border-bottom: 1px solid var(--line);
+  transition: background var(--d-base), border-color var(--d-base);
+}
+.site-header .row-inner {
+  height: 68px;
+  display: flex; align-items: center; gap: var(--space-6);
+  max-width: var(--maxw); margin: 0 auto;
+  padding: 0 var(--gut);
+}
+.site-header .brand {
+  display: flex; align-items: center; gap: 14px;
+  flex-shrink: 0;
+}
+.site-header .brand .mark { width: 34px; height: 34px; color: var(--text); }
+[data-mood='editorial'] .site-header .brand .mark { color: var(--accent); }
+[data-mood='lab'] .site-header .brand .mark { color: var(--accent); }
+.site-header .brand .word-row { display: flex; flex-direction: column; line-height: 1; }
+.site-header .brand .word { font: 800 14px/1 var(--font-sans); letter-spacing: 0.18em; }
+.site-header .brand .tag { font: 500 9px/1 var(--font-mono); letter-spacing: 0.2em; color: var(--muted); margin-top: 4px; text-transform: uppercase; }
+.site-header nav { display: flex; align-items: center; gap: 26px; flex: 1; }
+.site-header nav a {
+  font: 500 14px/1 var(--font-sans);
+  color: var(--muted);
+  transition: color var(--d-fast);
+  position: relative;
+}
+.site-header nav a:hover { color: var(--text); }
+.site-header nav a.is-active { color: var(--text); }
+.site-header nav a.is-active::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: -24px; height: 2px;
+  background: var(--accent);
+}
+.site-header .tools { display: flex; align-items: center; gap: 6px; margin-left: auto; }
+.site-header .icon-btn {
+  position: relative;
+  width: 38px; height: 38px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: var(--radius-s); color: var(--text);
+  transition: color var(--d-fast), background var(--d-fast);
+}
+.site-header .icon-btn:hover { color: var(--accent); background: var(--surface); }
+.site-header .icon-btn .badge {
+  position: absolute; top: 4px; right: 4px;
+  min-width: 16px; height: 16px; padding: 0 4px;
+  background: var(--accent); color: var(--bg);
+  border-radius: 999px;
+  font: 700 10px/16px var(--font-sans);
+  text-align: center;
+}
+.site-header .locale-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 30px; padding: 0 10px;
+  border: 1px solid var(--line); border-radius: var(--radius-pill);
+  font: 600 11px/1 var(--font-mono); letter-spacing: 0.16em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+/* =============================================================================
+ *  Footer
+ * ============================================================================= */
+.site-footer { border-top: 1px solid var(--line); padding-block: 80px 32px; background: var(--bg); }
+.site-footer .grid {
+  max-width: var(--maxw); margin: 0 auto; padding: 0 var(--gut);
+  display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 48px;
+}
+@media (max-width: 900px) { .site-footer .grid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 560px) { .site-footer .grid { grid-template-columns: 1fr; } }
+.site-footer h4 { font: 600 11px/1 var(--font-mono); letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted); margin: 0 0 18px; }
+.site-footer ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+.site-footer a { color: var(--text); font-size: 14px; }
+.site-footer a:hover { color: var(--accent); }
+.site-footer .about p { color: var(--muted); font-size: 14px; max-width: 36ch; }
+.site-footer .legal {
+  max-width: var(--maxw); margin: 56px auto 0; padding: 0 var(--gut);
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px;
+  border-top: 1px solid var(--line); padding-top: 24px;
+  font: 600 11px/1 var(--font-mono); letter-spacing: 0.16em; color: var(--muted); text-transform: uppercase;
+}
+
+/* =============================================================================
+ *  Product card / chip jersey
+ * ============================================================================= */
+.jersey-chip {
+  aspect-ratio: 4 / 5;
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-s);
+  background:
+    radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.05), transparent 60%),
+    var(--surface);
+  padding: 6px;
+}
+.jersey-chip svg { width: 100%; height: 100%; }
+
+/* Product card */
+.product-card {
+  background: var(--bg);
+  padding: 22px 22px 20px;
+  border: 1px solid var(--line);
+  transition: all var(--d-fast);
+}
+.product-card:hover { border-color: var(--line-2); transform: translateY(-2px); }
+.product-card .title { font: 600 16px/1.2 var(--font-sans); margin-top: 14px; }
+.product-card .sub { font: 400 13px/1.3 var(--font-sans); color: var(--muted); margin-top: 4px; }
+.product-card .price { font: 500 12px/1 var(--font-mono); letter-spacing: 0.08em; color: var(--muted); margin-top: 12px; }
+.product-card .league-tag {
+  position: absolute; top: 12px; left: 12px; z-index: 2;
+  height: 22px; padding: 0 8px;
+  background: rgba(0,0,0,0.55); color: #fff;
+  border-radius: 4px;
+  font: 600 9px/22px var(--font-mono); letter-spacing: 0.18em; text-transform: uppercase;
+}
+
+/* =============================================================================
+ *  Hero number / decorative big number
+ * ============================================================================= */
+.big-num {
+  font: 800 clamp(120px, 22vw, 360px)/0.85 var(--font-display);
+  letter-spacing: -0.06em;
+  color: transparent;
+  -webkit-text-stroke: 1px var(--line-2);
+  user-select: none;
+  pointer-events: none;
+}
+
+/* =============================================================================
+ *  Misc bits
+ * ============================================================================= */
+.kicker-rule { display: inline-block; height: 1px; width: 48px; background: var(--accent); margin-bottom: 18px; vertical-align: middle; }
+.dotted { background-image: radial-gradient(currentColor 1px, transparent 1px); background-size: 14px 14px; opacity: 0.18; }
+.hide-mobile { @media (max-width: 720px) { display: none; } }
+
+.scoreboard {
+  display: inline-flex; align-items: stretch; gap: 0;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-s);
+  background: rgba(0,0,0,0.4);
+  font-family: var(--font-mono);
+  overflow: hidden;
+}
+.scoreboard .seg { padding: 8px 14px; border-right: 1px solid var(--line); }
+.scoreboard .seg:last-child { border-right: 0; }
+.scoreboard .seg .lbl { display: block; font-size: 9px; letter-spacing: 0.22em; color: var(--muted); text-transform: uppercase; margin-bottom: 4px; }
+.scoreboard .seg .val { font-size: 14px; font-weight: 700; color: var(--text); letter-spacing: 0.04em; }
+.scoreboard .seg.is-live .val { color: var(--accent); }
+.scoreboard .seg.is-live .lbl::before { content: '● '; color: var(--accent); animation: pulse 1.4s infinite; }

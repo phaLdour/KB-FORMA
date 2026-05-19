@@ -1,736 +1,406 @@
 /* =============================================================================
- * shared.jsx — common shell: brand, header, footer, router, transition, hooks
- * Exposes everything to window so other Babel script files can use it.
+ * page-spor.jsx — KB Spor parent-brand hub (landing)
+ * Mood: kinetic (default)
  * ============================================================================= */
 
-const { useState, useEffect, useRef, useMemo, useCallback, createContext, useContext } = React;
+const { useState: useStateSpor, useEffect: useEffectSpor, useRef: useRefSpor } = React;
 
-/* ─────────────────────────── Icons ──────────────────────────────────────── */
-const Icon = ({ d, size = 18, stroke = 1.6 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={stroke} strokeLinecap="round" strokeLinejoin="round">{d}</svg>
-);
-const IconHeart = (p) => <Icon {...p} d={<path d="M12 21s-7-4.5-9.5-9A5.5 5.5 0 0 1 12 6a5.5 5.5 0 0 1 9.5 6c-2.5 4.5-9.5 9-9.5 9z" />} />;
-const IconBag = (p) => <Icon {...p} d={<><path d="M5 8h14l-1 12H6L5 8z" /><path d="M9 8a3 3 0 0 1 6 0" /></>} />;
-const IconUser = (p) => <Icon {...p} d={<><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></>} />;
-const IconArrow = (p) => <Icon {...p} d={<><path d="M5 12h14" /><path d="m13 6 6 6-6 6" /></>} />;
-const IconSearch = (p) => <Icon {...p} d={<><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></>} />;
-const IconMenu = (p) => <Icon {...p} d={<><path d="M4 7h16" /><path d="M4 12h16" /><path d="M4 17h16" /></>} />;
-const IconCheck = (p) => <Icon {...p} d={<path d="m5 12 4 4 10-10" />} />;
-const IconPlus = (p) => <Icon {...p} d={<><path d="M12 5v14" /><path d="M5 12h14" /></>} />;
-const IconMinus = (p) => <Icon {...p} d={<path d="M5 12h14" />} />;
-const IconChevron = (p) => <Icon {...p} d={<path d="m9 6 6 6-6 6" />} />;
+const SPOR_FEATURED = [
+  { to: '/futbol/pdp/galatasaray', title: 'Galatasaray',   sub: 'Süper Lig · 26/27', price: '2.299,00 ₺', primary: '#A90432', secondary: '#FFB81C', accent: '#FFB81C', crest: 'GS', num: '10', pattern: 'half', tag: 'Süper Lig' },
+  { to: '/futbol/pdp/fenerbahce',  title: 'Fenerbahçe',     sub: 'Süper Lig · 26/27', price: '2.299,00 ₺', primary: '#0F3F8C', secondary: '#FCD116', accent: '#fff', crest: 'FB', num: '7',  pattern: 'stripes-v', tag: 'Süper Lig' },
+  { to: '/futbol/pdp/real-madrid', title: 'Real Madrid',    sub: 'La Liga · 26/27',   price: '2.599,00 ₺', primary: '#F5F5F5', secondary: '#FEBE10', accent: '#0a0a0b', crest: 'RM', num: '9',  pattern: 'plain', tag: 'La Liga' },
+  { to: '/futbol/pdp/barcelona',   title: 'Barcelona',     sub: 'La Liga · 26/27',   price: '2.599,00 ₺', primary: '#A50044', secondary: '#004D98', accent: '#FCD116', crest: 'FCB', num: '10', pattern: 'stripes-v', tag: 'La Liga' },
+  { to: '/futbol/klasik/mar86',    title: 'Maradona ’86',   sub: 'Maison KB',         price: '14.999,00 ₺', primary: '#75AADB', secondary: '#F6B40E', accent: '#0a0a0b', crest: 'ARG', num: '10', pattern: 'stripes-v', tag: 'Heritage' },
+  { to: '/futbol/klasik/zid98',    title: 'Zidane ’98',     sub: 'Maison KB',         price: '14.999,00 ₺', primary: '#0055A4', secondary: '#EF4135', accent: '#fff', crest: 'FRA', num: '10', pattern: 'plain', tag: 'Heritage' },
+  { to: '/basket/nba/lakers',      title: 'LA Lakers',     sub: 'NBA · 26/27',       price: '2.799,00 ₺', primary: '#552583', secondary: '#FDB927', accent: '#FDB927', crest: 'LAL', num: '23', pattern: 'plain', tag: 'NBA' },
+  { to: '/basket/bsl/anadolu-efes',title: 'Anadolu Efes',   sub: 'BSL · 26/27',       price: '2.499,00 ₺', primary: '#003478', secondary: '#FFFFFF', accent: '#fff', crest: 'EFS', num: '8',  pattern: 'half', tag: 'BSL' },
+];
 
-/* ─────────────────────────── Brand Mark ─────────────────────────────────── */
-function BrandMark({ size = 36, className = '' }) {
+function HubSporPage() {
   return (
-    <svg width={size} height={size} viewBox="0 0 100 100" role="img" aria-label="KB Spor" className={className} style={{ color: 'currentColor' }}>
-      <g fill="none" stroke="currentColor" strokeLinecap="square" strokeLinejoin="miter">
-        <circle cx="50" cy="50" r="44" strokeWidth="1.8" />
-        <path d="M24 30 V70" strokeWidth="3" />
-        <path d="M24 50 L39 30" strokeWidth="2.5" />
-        <path d="M24 50 L39 70" strokeWidth="2.5" />
-        <path d="M55 30 V70" strokeWidth="3" />
-        <path d="M55 30 H63 a9 9 0 0 1 0 18 H55" strokeWidth="2.5" />
-        <path d="M55 48 H65 a11 11 0 0 1 0 22 H55" strokeWidth="2.5" />
-      </g>
-    </svg>
-  );
-}
+    <div style={{ paddingTop: 0 }}>
 
-/* ─────────────────────────── Hash router ────────────────────────────────── */
-// Routes: /, /futbol, /basket, /futbol/klasik, /futbol/builder, /futbol/pdp/<slug>
-function useHashRoute() {
-  const get = () => (window.location.hash.replace(/^#/, '') || '/').replace(/\/$/, '') || '/';
-  const [path, setPath] = useState(get);
-  useEffect(() => {
-    const onHash = () => setPath(get());
-    window.addEventListener('hashchange', onHash);
-    return () => window.removeEventListener('hashchange', onHash);
-  }, []);
-  const navigate = useCallback((to) => {
-    if (to.startsWith('#')) to = to.slice(1);
-    window.location.hash = to;
-  }, []);
-  return { path, navigate };
-}
-
-const RouterCtx = createContext({ path: '/', navigate: () => {} });
-const useRouter = () => useContext(RouterCtx);
-
-/* Link wraps an <a> so we can trigger the cinematic transition before nav */
-function Link({ to, children, className, style, transitionLabel, transitionSub, panelColor, panelText, onClick }) {
-  const { navigate } = useRouter();
-  const transition = useTransition();
-  return (
-    <a
-      href={'#' + to}
-      className={className}
-      style={style}
-      onClick={(e) => {
-        if (e.metaKey || e.ctrlKey || e.shiftKey) return;
-        e.preventDefault();
-        if (onClick) onClick();
-        if (transitionLabel) {
-          transition.run({ label: transitionLabel, sub: transitionSub, panelColor, panelText, onMidway: () => navigate(to) });
-        } else {
-          navigate(to);
-        }
-      }}
-    >
-      {children}
-    </a>
-  );
-}
-
-/* ─────────────────────────── Cinematic Transition ───────────────────────── */
-const TransitionCtx = createContext(null);
-const useTransition = () => useContext(TransitionCtx);
-
-function TransitionProvider({ children }) {
-  const [state, setState] = useState({ phase: 'idle', label: '', sub: '', panelColor: '#000', panelText: '#fff' });
-
-  const run = useCallback(({ label, sub, panelColor = '#000', panelText = '#fff', onMidway }) => {
-    setState({ phase: 'entering', label, sub, panelColor, panelText });
-    setTimeout(() => {
-      if (onMidway) onMidway();
-      window.scrollTo({ top: 0, behavior: 'auto' });
-      setState((s) => ({ ...s, phase: 'exiting' }));
-      setTimeout(() => setState((s) => ({ ...s, phase: 'idle' })), 600);
-    }, 700);
-  }, []);
-
-  return (
-    <TransitionCtx.Provider value={{ run }}>
-      {children}
-      {state.phase !== 'idle' && (
-        <div
-          className={`transition-overlay is-${state.phase}`}
-          style={{ '--panel-color': state.panelColor, '--panel-text': state.panelText }}
-          aria-hidden="true"
-        >
-          <div className="panel" />
-          <div>
-            <div className="label">{state.label}</div>
-            {state.sub && <div className="sublabel">{state.sub}</div>}
-          </div>
+      {/* =================================================================
+            HERO — split editorial layout. Big italic word "aitsiniz."
+         ================================================================= */}
+      <section style={{ position: 'relative', overflow: 'hidden', minHeight: '92vh', display: 'flex', alignItems: 'center' }}>
+        {/* decorative bg layers */}
+        <div aria-hidden="true" style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+          <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 60% 40% at 20% 30%, rgba(255,77,46,0.16), transparent 60%)' }} />
+          <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 50% 50% at 90% 80%, rgba(0,240,255,0.08), transparent 60%)' }} />
+          <div className="bg-grid" style={{ position: 'absolute', inset: 0 }} />
         </div>
-      )}
-    </TransitionCtx.Provider>
-  );
-}
 
-/* ─────────────────────────── Cart context ──────────────────────────────── */
-const CartCtx = createContext(null);
-const useCart = () => useContext(CartCtx);
-function CartProvider({ children }) {
-  const [count, setCount] = useState(0);
-  const [favorites, setFavorites] = useState(0);
-  const add = useCallback(() => setCount((c) => c + 1), []);
-  const fav = useCallback(() => setFavorites((f) => f + 1), []);
-  return <CartCtx.Provider value={{ count, favorites, add, fav }}>{children}</CartCtx.Provider>;
-}
-
-/* ─────────────────────────── Auth context ──────────────────────────────── */
-// Local-only auth: users persisted in localStorage under "kb-spor.users",
-// current session under "kb-spor.session". No backend — this is a prototype.
-const AUTH_USERS_KEY = 'kb-spor.users';
-const AUTH_SESSION_KEY = 'kb-spor.session';
-const AuthCtx = createContext(null);
-const useAuth = () => useContext(AuthCtx);
-
-function AuthProvider({ children }) {
-  const [user, setUser] = useState(() => {
-    try { const s = localStorage.getItem(AUTH_SESSION_KEY); return s ? JSON.parse(s) : null; }
-    catch { return null; }
-  });
-
-  const readUsers = () => {
-    try { return JSON.parse(localStorage.getItem(AUTH_USERS_KEY) || '{}'); }
-    catch { return {}; }
-  };
-  const writeUsers = (u) => { try { localStorage.setItem(AUTH_USERS_KEY, JSON.stringify(u)); } catch {} };
-
-  const setSession = (u) => {
-    setUser(u);
-    try {
-      if (u) localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(u));
-      else localStorage.removeItem(AUTH_SESSION_KEY);
-    } catch {}
-  };
-
-  // Returns { ok, error }
-  const register = useCallback(({ name, email, phone, password }) => {
-    if (!name || name.trim().length < 2) return { ok: false, error: 'Adınızı en az 2 karakter olarak girin.' };
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email || '')) return { ok: false, error: 'Geçerli bir e-posta adresi girin.' };
-    if (!password || password.length < 6) return { ok: false, error: 'Şifreniz en az 6 karakter olmalı.' };
-    const users = readUsers();
-    if (users[email.toLowerCase()]) return { ok: false, error: 'Bu e-posta zaten kayıtlı. Giriş yapmayı deneyin.' };
-    const u = { name: name.trim(), email: email.toLowerCase(), phone: phone || '', password, createdAt: Date.now() };
-    users[email.toLowerCase()] = u;
-    writeUsers(users);
-    const session = { name: u.name, email: u.email, phone: u.phone };
-    setSession(session);
-    return { ok: true };
-  }, []);
-
-  const login = useCallback(({ email, password }) => {
-    if (!email || !password) return { ok: false, error: 'E-posta ve şifre gerekli.' };
-    const users = readUsers();
-    const u = users[email.toLowerCase()];
-    if (!u) return { ok: false, error: 'Bu e-posta için kayıt bulamadık.' };
-    if (u.password !== password) return { ok: false, error: 'Şifre yanlış.' };
-    const session = { name: u.name, email: u.email, phone: u.phone };
-    setSession(session);
-    return { ok: true };
-  }, []);
-
-  const logout = useCallback(() => setSession(null), []);
-
-  return (
-    <AuthCtx.Provider value={{ user, register, login, logout }}>
-      {children}
-    </AuthCtx.Provider>
-  );
-}
-
-/* ─────────────────────────── Mood context ──────────────────────────────── */
-// Mood is driven primarily by route. Tweaks can pin it.
-const MoodCtx = createContext({ mood: 'kinetic', accent: null });
-
-function MoodFromRoute({ path, children, tweakMood, tweakAccent }) {
-  const auto = useMemo(() => {
-    if (path.startsWith('/futbol/klasik')) return 'editorial';
-    if (path.startsWith('/futbol/builder')) return 'lab';
-    if (path.startsWith('/futbol')) return 'futbol';
-    if (path.startsWith('/basket')) return 'basket';
-    return 'kinetic';
-  }, [path]);
-  const mood = tweakMood && tweakMood !== 'auto' ? tweakMood : auto;
-  useEffect(() => {
-    document.documentElement.setAttribute('data-mood', mood);
-    if (tweakAccent) document.documentElement.style.setProperty('--accent', tweakAccent);
-    else document.documentElement.style.removeProperty('--accent');
-  }, [mood, tweakAccent]);
-  return <MoodCtx.Provider value={{ mood }}>{children}</MoodCtx.Provider>;
-}
-
-/* ─────────────────────────── Header ─────────────────────────────────────── */
-function Header() {
-  const { path } = useRouter();
-  const cart = useCart();
-  const auth = useAuth();
-  const [menuOpen, setMenuOpen] = useState(false);
-
-  const links = [
-    { to: '/',         label: 'Anasayfa' },
-    { to: '/futbol',   label: 'KB Futbol', transitionLabel: 'KB FUTBOL', transitionSub: 'Crafted for Champions', panelColor: '#0a0a0b', panelText: '#ff4d2e' },
-    { to: '/basket',   label: 'KB Basket', transitionLabel: 'KB BASKET', transitionSub: 'Parke. Çember. Bir takım.', panelColor: '#0a0a0b', panelText: '#ff7a23' },
-    { to: '/futbol/klasik',  label: 'Maison KB', transitionLabel: 'MAISON KB', transitionSub: 'Heritage · Crafted Once', panelColor: '#050403', panelText: '#d4af37' },
-    { to: '/futbol/builder', label: 'KB.LAB', transitionLabel: 'KB.LAB', transitionSub: '// SYSTEM ONLINE', panelColor: '#06080c', panelText: '#00f0ff' },
-    { to: '/iletisim', label: 'İletişim' },
-  ];
-  const isActive = (to) => {
-    if (to === '/') return path === '/';
-    if (to === '/futbol/klasik') return path.startsWith('/futbol/klasik');
-    if (to === '/futbol/builder') return path.startsWith('/futbol/builder');
-    if (to === '/futbol') return path === '/futbol' || (path.startsWith('/futbol') && !path.startsWith('/futbol/klasik') && !path.startsWith('/futbol/builder'));
-    return path.startsWith(to);
-  };
-
-  // Close the user menu on route change
-  useEffect(() => { setMenuOpen(false); }, [path]);
-  // Close on outside click
-  useEffect(() => {
-    if (!menuOpen) return;
-    const onDown = (e) => { if (!e.target.closest?.('.user-menu-anchor')) setMenuOpen(false); };
-    document.addEventListener('mousedown', onDown);
-    return () => document.removeEventListener('mousedown', onDown);
-  }, [menuOpen]);
-
-  return (
-    <header className="site-header">
-      <div className="row-inner">
-        <Link to="/" className="brand">
-          <BrandMark size={34} className="mark" />
-          <div className="word-row">
-            <span className="word">KB SPOR</span>
-            <span className="tag">Crafted for Champions</span>
-          </div>
-        </Link>
-
-        <nav aria-label="Primary">
-          {links.map((l) => (
-            <Link
-              key={l.to}
-              to={l.to}
-              className={isActive(l.to) ? 'is-active' : ''}
-              transitionLabel={l.transitionLabel}
-              transitionSub={l.transitionSub}
-              panelColor={l.panelColor}
-              panelText={l.panelText}
-            >
-              {l.label}
-            </Link>
-          ))}
-        </nav>
-
-        <div className="tools">
-          <span className="locale-pill"><span style={{ color: 'var(--text)' }}>TR</span> / <span>EN</span></span>
-          <span className="locale-pill"><span style={{ color: 'var(--text)' }}>₺</span> TRY</span>
-          <button className="icon-btn" aria-label="Ara"><IconSearch size={18} /></button>
-          <button className="icon-btn" aria-label="Favoriler">
-            <IconHeart size={18} />
-            {cart.favorites > 0 && <span className="badge">{cart.favorites}</span>}
-          </button>
-          <button className="icon-btn" aria-label="Sepet">
-            <IconBag size={18} />
-            {cart.count > 0 && <span className="badge">{cart.count}</span>}
-          </button>
-
-          <div className="user-menu-anchor" style={{ position: 'relative' }}>
-            {auth.user ? (
-              <button
-                className="icon-btn"
-                aria-label={`Hesabım — ${auth.user.name}`}
-                onClick={() => setMenuOpen((o) => !o)}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '0 10px', width: 'auto' }}
-              >
-                <span style={{ display: 'inline-grid', placeItems: 'center', width: 26, height: 26, borderRadius: 50, background: 'var(--accent)', color: 'var(--bg)', font: '700 11px/1 var(--font-sans)' }}>
-                  {auth.user.name.trim().split(/\s+/).map((s) => s[0]).join('').slice(0, 2).toUpperCase()}
-                </span>
-                <span className="hide-on-mobile" style={{ font: '600 12px/1 var(--font-mono)', letterSpacing: '0.06em' }}>
-                  {auth.user.name.split(' ')[0].toUpperCase()}
-                </span>
-              </button>
-            ) : (
-              <button className="icon-btn" aria-label="Giriş yap / kayıt ol" onClick={() => setMenuOpen((o) => !o)}>
-                <IconUser size={18} />
-              </button>
-            )}
-
-            {menuOpen && <UserMenu onClose={() => setMenuOpen(false)} />}
-          </div>
+        {/* big background number */}
+        <div aria-hidden="true" style={{ position: 'absolute', right: 'calc(-1 * var(--gut))', top: '6vh', pointerEvents: 'none' }}>
+          <span className="big-num">26<span style={{ color: 'var(--accent)', WebkitTextStroke: 0 }}>/</span>27</span>
         </div>
-      </div>
-    </header>
-  );
-}
 
-/* ---------- User dropdown menu ---------- */
-function UserMenu({ onClose }) {
-  const auth = useAuth();
-  const { navigate } = useRouter();
-  const go = (to) => { onClose(); navigate(to); };
-  return (
-    <div
-      role="menu"
-      style={{
-        position: 'absolute', right: 0, top: 'calc(100% + 12px)', minWidth: 240,
-        background: 'var(--bg-2)', border: '1px solid var(--line-2)',
-        borderRadius: 10, padding: 8, zIndex: 100,
-        boxShadow: '0 12px 32px rgba(0,0,0,0.6)',
-      }}
-    >
-      {auth.user ? (
-        <>
-          <div style={{ padding: '12px 14px 14px', borderBottom: '1px solid var(--line)' }}>
-            <div style={{ font: '600 14px/1.2 var(--font-sans)', color: 'var(--text)' }}>{auth.user.name}</div>
-            <div className="text-caption muted" style={{ marginTop: 2 }}>{auth.user.email}</div>
-          </div>
-          <MenuItem onClick={() => go('/hesap')}>Hesabım</MenuItem>
-          <MenuItem onClick={() => go('/hesap/siparisler')}>Siparişlerim</MenuItem>
-          <MenuItem onClick={() => go('/hesap/tasarimlarim')}>Tasarımlarım</MenuItem>
-          <MenuItem onClick={() => { auth.logout(); onClose(); }} danger>Çıkış yap</MenuItem>
-        </>
-      ) : (
-        <>
-          <div style={{ padding: '12px 14px 8px' }}>
-            <div className="text-micro" style={{ color: 'var(--muted)', marginBottom: 6 }}>HESAP</div>
-            <div className="text-small" style={{ color: 'var(--muted)' }}>
-              Siparişlerinizi ve tasarımlarınızı takip edin.
+        <div className="container" style={{ position: 'relative', width: '100%', display: 'grid', gridTemplateColumns: '1fr', gap: 32, paddingBlock: 'clamp(72px, 11vw, 140px)' }}>
+          <Reveal>
+            <div className="eyebrow"><span className="eyebrow-dot" />YENİ SEZON · FW 26 / 27 · İSTANBUL</div>
+          </Reveal>
+
+          <Reveal delay={120}>
+            <h1 className="h-display" style={{ maxWidth: '14ch' }}>
+              Sahaya<br />
+              <span className="italic-display" style={{ color: 'var(--accent)' }}>aitsiniz.</span><br />
+              Formayı siz seçin.
+            </h1>
+          </Reveal>
+
+          <Reveal delay={240}>
+            <p className="text-lead muted" style={{ maxWidth: '58ch' }}>
+              Avrupa'nın en büyük kulüpleri ve milli takımlardan ilham alan, İtalyan kumaşıyla İstanbul'da dokunan formalar. Ya da kendi renginizi, kendi numaranızı taşıyan tek parçayı tasarlayın.
+            </p>
+          </Reveal>
+
+          <Reveal delay={360}>
+            <div className="row" style={{ flexWrap: 'wrap', gap: 12, marginTop: 12 }}>
+              <Link to="/futbol" className="btn btn-primary btn-lg" transitionLabel="KB FUTBOL" transitionSub="Crafted for Champions" panelColor="#0a0a0b" panelText="#ff4d2e">
+                Futbol koleksiyonu <IconArrow size={16} />
+              </Link>
+              <Link to="/basket" className="btn btn-ghost btn-lg" transitionLabel="KB BASKET" transitionSub="Parke. Çember. Bir takım." panelColor="#0a0a0b" panelText="#ff7a23">
+                Basket koleksiyonu <IconArrow size={16} />
+              </Link>
+              <Link to="/futbol/builder" className="btn-quiet" transitionLabel="KB.LAB" transitionSub="// SYSTEM ONLINE" panelColor="#06080c" panelText="#00f0ff" style={{ marginLeft: 8, fontFamily: 'var(--font-mono)', fontSize: 12, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--muted)' }}>
+                // KB.LAB'da kendinizinkini tasarlayın <IconArrow size={14} />
+              </Link>
             </div>
-          </div>
-          <MenuItem onClick={() => go('/giris')}><strong>Giriş yap</strong> →</MenuItem>
-          <MenuItem onClick={() => go('/kayit')}>Yeni hesap oluştur →</MenuItem>
-        </>
-      )}
-    </div>
-  );
-}
-function MenuItem({ onClick, children, danger }) {
-  return (
-    <button
-      type="button"
-      role="menuitem"
-      onClick={onClick}
-      style={{
-        display: 'block', width: '100%', textAlign: 'left',
-        padding: '10px 14px',
-        font: '500 13px/1.3 var(--font-sans)',
-        color: danger ? '#ff7a55' : 'var(--text)',
-        borderRadius: 6,
-        transition: 'background 120ms',
-      }}
-      onMouseEnter={(e) => e.currentTarget.style.background = 'var(--surface)'}
-      onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-    >
-      {children}
-    </button>
-  );
-}
+          </Reveal>
 
-/* ─────────────────────────── Footer ─────────────────────────────────────── */
-function Footer({ variant = 'spor' }) {
-  const COLUMNS_BY_VARIANT = {
-    spor: [
-      { heading: 'Alışveriş', links: [
-        { to: '/futbol', label: 'KB Futbol' },
-        { to: '/basket', label: 'KB Basket' },
-        { to: '/futbol/klasik', label: 'Maison KB' },
-        { to: '/futbol/builder', label: 'KB.LAB Tasarla' },
-      ]},
-      { heading: 'Yardım', links: [
-        { to: '/yardim/beden', label: 'Beden Tablosu' },
-        { to: '/yardim/kargo', label: 'Kargo & Teslimat' },
-        { to: '/yardim/iade', label: 'İade & Değişim' },
-        { to: '/iletisim', label: 'İletişim' },
-      ]},
-      { heading: 'Marka', links: [
-        { to: '/hakkimizda', label: 'Hakkımızda' },
-        { to: '/atolye', label: 'Atölye' },
-        { to: '/surdurulebilirlik', label: 'Sürdürülebilirlik' },
-      ]},
-    ],
-    futbol: [
-      { heading: 'Futbol', links: [
-        { to: '/futbol/formalar', label: 'Tüm Formalar' },
-        { to: '/futbol/klasik', label: 'Maison KB · Klasik' },
-        { to: '/futbol/builder', label: 'KB.LAB Tasarla' },
-        { to: '/futbol/krampon', label: 'Krampon' },
-        { to: '/futbol/top', label: 'Toplar' },
-        { to: '/futbol/milli-takimlar', label: 'Milli Takımlar' },
-      ]},
-      { heading: 'Yardım', links: [
-        { to: '/yardim/beden', label: 'Beden Tablosu' },
-        { to: '/yardim/kargo', label: 'Kargo & Teslimat' },
-        { to: '/yardim/iade', label: 'İade & Değişim' },
-      ]},
-      { heading: 'Marka', links: [
-        { to: '/hakkimizda', label: 'Hakkımızda' },
-        { to: '/atolye', label: 'Atölye' },
-      ]},
-    ],
-    basket: [
-      { heading: 'Basket', links: [
-        { to: '/basket/nba', label: 'NBA' },
-        { to: '/basket/bsl', label: 'BSL' },
-        { to: '/basket/top', label: 'Toplar' },
-        { to: '/basket/ayakkabi', label: 'Ayakkabı (Yakında)' },
-      ]},
-      { heading: 'Yardım', links: [
-        { to: '/yardim/beden', label: 'Beden Tablosu' },
-        { to: '/yardim/kargo', label: 'Kargo & Teslimat' },
-        { to: '/yardim/iade', label: 'İade & Değişim' },
-      ]},
-      { heading: 'Marka', links: [
-        { to: '/hakkimizda', label: 'Hakkımızda' },
-        { to: '/atolye', label: 'Atölye' },
-      ]},
-    ],
-  };
-  const columns = COLUMNS_BY_VARIANT[variant] || COLUMNS_BY_VARIANT.spor;
-  const aboutCopy = {
-    spor: "İstanbul'dan dünyaya — premium forma üretimi ve tek parça koleksiyon. Şampiyonlar için dokunmuş.",
-    futbol: "KB Futbol — Avrupa'nın elit kulüpleri, milli takımlar, klasikler ve sizin için tek parça forma.",
-    basket: "KB Basket — NBA ve BSL formaları, profesyonel basketbol topları, yakında performans ayakkabısı.",
-  }[variant];
-
-  return (
-    <footer className="site-footer">
-      <div className="grid">
-        <div className="about">
-          <Link to="/" className="row" style={{ marginBottom: 16, gap: 12 }}>
-            <BrandMark size={32} />
-            <span style={{ font: '800 14px/1 var(--font-sans)', letterSpacing: '0.18em' }}>KB SPOR</span>
-          </Link>
-          <p>{aboutCopy}</p>
-          <p style={{ marginTop: 16, fontSize: 13, color: 'var(--muted)' }}>Levent Mh. Spor Cad. No:8 · Beşiktaş, İstanbul</p>
-          <p style={{ marginTop: 4, fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--muted)', letterSpacing: '0.08em' }}>+90 850 KB FORMA</p>
+          {/* live status row — KB-style scoreboard */}
+          <Reveal delay={480}>
+            <div className="row" style={{ marginTop: 40, flexWrap: 'wrap', gap: 12 }}>
+              <div className="scoreboard">
+                <div className="seg is-live"><span className="lbl">CANLI</span><span className="val">ATÖLYE</span></div>
+                <div className="seg"><span className="lbl">SİPARİŞ</span><span className="val">142 / GÜN</span></div>
+                <div className="seg"><span className="lbl">ÜRETİM</span><span className="val">7–14 GÜN</span></div>
+                <div className="seg"><span className="lbl">KARGO</span><span className="val">1–3 GÜN</span></div>
+                <div className="seg"><span className="lbl">KDV</span><span className="val">DAHİL %20</span></div>
+              </div>
+            </div>
+          </Reveal>
         </div>
-        {columns.map((col) => (
-          <div key={col.heading}>
-            <h4>{col.heading}</h4>
-            <ul>{col.links.map((l) => (<li key={l.to}><Link to={l.to}>{l.label}</Link></li>))}</ul>
-          </div>
-        ))}
-      </div>
-      <div className="legal">
-        <span>© 2026 KB Spor</span>
-        <span>KVKK · GİZLİLİK · ÇEREZ POLİTİKASI</span>
-        <span style={{ color: 'var(--dim)' }}>Şampiyonlar için dokunmuş.</span>
-      </div>
-    </footer>
-  );
-}
+      </section>
 
-/* ─────────────────────────── Marquee ────────────────────────────────────── */
-function Marquee({ items, color = 'muted' }) {
-  // items: array of strings. We duplicate so the loop seam is invisible.
-  const fragment = items.map((it, i) => (
-    <React.Fragment key={i}>
-      <span className={typeof it === 'object' && it.hi ? 'hi' : ''}>{typeof it === 'object' ? it.text : it}</span>
-      <span className="dot">●</span>
-    </React.Fragment>
-  ));
-  return (
-    <div className="marquee" aria-hidden="true">
-      <div className="marquee-track">
-        {fragment}
-        {fragment}
-      </div>
+      <Marquee items={[
+        'CRAFTED FOR CHAMPIONS', { text: 'KB SPOR', hi: true }, 'EST 2020', 'İSTANBUL', 'FW 26 / 27', 'MAISON KB', 'KB.LAB', 'MADE-TO-ORDER', 'İTALYAN KUMAŞ',
+      ]} />
+
+      {/* =================================================================
+            HUB SPLIT — Futbol / Basket
+         ================================================================= */}
+      <section className="container" style={{ paddingBlock: 'clamp(60px, 8vw, 100px)' }}>
+        <Reveal>
+          <div className="eyebrow" style={{ marginBottom: 18 }}>İKİ DESTİNASYON · BİR SEPET</div>
+          <h2 className="h-2" style={{ maxWidth: '20ch', marginBottom: 56 }}>Spordan iki dil. <span className="italic-display muted">Aynı dokuma.</span></h2>
+        </Reveal>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, background: 'var(--line)' }} className="hub-split-grid">
+          <HubSplitPane
+            to="/futbol"
+            eyebrow="KB FUTBOL"
+            title="Saha. Tribün. Bir parça."
+            description="Avrupa'nın en iyi kulüpleri, milli takımlar, klasikler ve sizin için tek parça forma. Krampon ve top koleksiyonu da burada."
+            bullets={['Klasik · Takım · Ülke formaları (made-to-order)', 'Krampon, top, antrenman aksesuarları', 'KB.LAB — 3D custom forma tasarımı']}
+            accentColor="#ff4d2e"
+            ctaLabel="KB Futbol'a gir"
+            transitionLabel="KB FUTBOL"
+            transitionSub="Crafted for Champions"
+            panelColor="#0a0a0b"
+            panelText="#ff4d2e"
+            decoration="futbol"
+          />
+          <HubSplitPane
+            to="/basket"
+            eyebrow="KB BASKET"
+            title="Parke. Çember. Bir takım."
+            description="NBA ve BSL takımlarının formaları, profesyonel basketbol topları, ve yakında — performans ayakkabısı."
+            bullets={['NBA ve BSL takım formaları (made-to-order)', 'Profesyonel basketbol topları (gerçek stok)', 'Basketbol ayakkabısı — yakında']}
+            accentColor="#ff7a23"
+            ctaLabel="KB Basket'a gir"
+            transitionLabel="KB BASKET"
+            transitionSub="Parke. Çember. Bir takım."
+            panelColor="#0a0a0b"
+            panelText="#ff7a23"
+            decoration="basket"
+          />
+        </div>
+      </section>
+
+      {/* =================================================================
+            THREE WORLDS — Maison KB, KB.LAB, Atölye narrative
+         ================================================================= */}
+      <section className="container" style={{ paddingBlock: 'clamp(40px, 6vw, 80px)' }}>
+        <Reveal>
+          <div className="eyebrow" style={{ marginBottom: 18 }}>ÜÇ DÜNYA · BİR ATÖLYE</div>
+          <h2 className="h-2" style={{ maxWidth: '20ch', marginBottom: 56 }}>Hangi koltukta oturmak istersiniz?</h2>
+        </Reveal>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1, background: 'var(--line)' }} className="three-worlds-grid">
+          <WorldCard
+            to="/futbol/klasik"
+            eyebrow="MAISON KB · HERITAGE"
+            title="Bir kez dokunmuş."
+            body="Maradona '86, Zidane '98, Cristiano '07. Numaralandırılmış, sertifikalandırılmış, el işçiliğiyle yeniden dokunmuş efsane formalar."
+            tone="gold"
+            transitionLabel="MAISON KB"
+            transitionSub="Heritage · Crafted Once"
+            panelColor="#050403"
+            panelText="#d4af37"
+            accent={<MaisonAccent />}
+          />
+          <WorldCard
+            to="/futbol/builder"
+            eyebrow="// KB.LAB"
+            title="Tek parça spesifikasyon."
+            body="4 şablon, 3 kumaş, sınırsız renk. Gerçek zamanlı 3D — paylaşabileceğiniz bir URL ile saklayın, üretime gönderin."
+            tone="neon"
+            transitionLabel="KB.LAB"
+            transitionSub="// SYSTEM ONLINE"
+            panelColor="#06080c"
+            panelText="#00f0ff"
+            accent={<LabAccent />}
+          />
+          <WorldCard
+            to="/atolye"
+            eyebrow="ATÖLYE · BEŞİKTAŞ"
+            title="Önce ip, sonra forma."
+            body="Levent Atölye'de her forma elle dikilir. Sipariş geldikten 7–14 gün sonra üretim biter, 1–3 gün sonra kapınızda."
+            tone="kinetic"
+            accent={<AtolyeAccent />}
+          />
+        </div>
+      </section>
+
+      {/* =================================================================
+            FEATURED DROPS — combined products from both hubs
+         ================================================================= */}
+      <Section
+        eyebrow="ÖNE ÇIKANLAR · BU HAFTA"
+        heading={<>Bu hafta <span className="italic-display muted">vitrinde</span>.</>}
+        cta={<Link to="/futbol" className="btn-quiet"><span style={{ font: '600 13px/1 var(--font-sans)' }}>Tüm koleksiyon</span> <IconArrow className="arrow" size={14} /></Link>}
+      >
+        <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1, background: 'var(--line)' }} className="featured-grid">
+          {SPOR_FEATURED.map((item, i) => (
+            <li key={item.to} className="product-card" style={{ position: 'relative', padding: 22 }}>
+              <Link to={item.to}>
+                <span className="league-tag">{item.tag}</span>
+                <JerseyChip primary={item.primary} secondary={item.secondary} accent={item.accent} crest={item.crest} num={item.num} pattern={item.pattern} />
+                <div className="title">{item.title}</div>
+                <div className="sub">{item.sub}</div>
+                <div className="price">{item.price}</div>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </Section>
+
+      {/* =================================================================
+            VOICE / Strapline closer
+         ================================================================= */}
+      <section className="full-bleed" style={{ borderTop: '1px solid var(--line)', borderBottom: '1px solid var(--line)', padding: 'clamp(80px, 12vw, 160px) var(--gut)', background: 'var(--bg-2)' }}>
+        <div className="container" style={{ textAlign: 'center', padding: 0 }}>
+          <Reveal>
+            <div className="eyebrow" style={{ marginBottom: 20 }}>STRAPLINE · EST 2020</div>
+            <h2 className="h-display" style={{ maxWidth: '14ch', margin: '0 auto', textAlign: 'center' }}>
+              <span className="italic-display">Şampiyonlar</span> için<br />dokunmuş.
+            </h2>
+            <p className="text-lead muted" style={{ maxWidth: '52ch', margin: '32px auto 0' }}>
+              Made-to-order. İtalyan kumaşı. İstanbul'da, Levent atölyesinde tek tek üretilir. Stok yok — sadece sizin için dokunan parça.
+            </p>
+          </Reveal>
+        </div>
+      </section>
+
+      <style>{`
+        @media (max-width: 900px) {
+          .hub-split-grid, .three-worlds-grid { grid-template-columns: 1fr !important; }
+          .featured-grid { grid-template-columns: repeat(2, 1fr) !important; }
+        }
+        @media (max-width: 540px) {
+          .featured-grid { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
     </div>
   );
 }
 
-/* ─────────────────────────── Jersey art ────────────────────────────────── */
-// One SVG silhouette used everywhere — product chips, PDP hero, lab preview.
-// Sized via a viewBox so it scales without changing proportions. Supports
-// front (crest + small chest number) and back (NAME + big NUMBER).
-function JerseyArt({
-  primary = '#444', secondary = '#222', accent = '#fff', cuff,
-  pattern = 'plain',       // 'plain' | 'stripes-v' | 'stripes-h' | 'half' | 'sash'
-  view = 'front',          // 'front' | 'back'
-  crest,                   // 2–3 char string (e.g. "GS")
-  num,                     // 1–2 char string
-  name,                    // back-of-jersey nameplate string (uppercase)
-  brandTag = 'KB · SPOR',  // hem tag
-  className,
-  style,
-}) {
-  const W = 200, H = 250;
-  // Body path with proper V-neck, shoulders, and curved hem.
-  const BODY = 'M40 30 L70 25 L100 56 L130 25 L160 30 L195 56 L184 96 L160 88 L162 236 Q100 248 38 236 L40 88 L16 96 L5 56 Z';
-  // Inner cut used as clip for patterns (slightly inset so patterns don't show on collar/sleeves)
-  const cuffColor = cuff || secondary;
-
-  // Use safe ids per instance so multiple jerseys on a page don't collide.
-  const uid = React.useId ? React.useId().replace(/[^a-z0-9]/gi, '') : Math.random().toString(36).slice(2, 8);
-
-  // Number sizing — single digit can be bigger; two digits scaled down a touch
-  const numLen = String(num || '').length;
-  const bigNumSize = numLen >= 2 ? 100 : 116;
-
+/* ---------- HubSplitPane ----------------------------------------------- */
+function HubSplitPane({ to, eyebrow, title, description, bullets, accentColor, ctaLabel, transitionLabel, transitionSub, panelColor, panelText, decoration }) {
+  const [hover, setHover] = useStateSpor(false);
   return (
-    <svg
-      viewBox={`0 0 ${W} ${H}`}
-      preserveAspectRatio="xMidYMid meet"
-      className={className}
-      style={{ display: 'block', width: '100%', height: '100%', ...style }}
-      role="img"
-      aria-label={view === 'back' ? `Forma · ${name || ''} ${num || ''}` : `Forma · ${crest || ''}`}
+    <Link
+      to={to}
+      transitionLabel={transitionLabel}
+      transitionSub={transitionSub}
+      panelColor={panelColor}
+      panelText={panelText}
+      className="hub-pane"
+      style={{
+        position: 'relative', overflow: 'hidden',
+        background: hover ? 'var(--bg-2)' : 'var(--bg)',
+        padding: 'clamp(36px, 5vw, 64px)',
+        minHeight: 460,
+        display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+        transition: 'all var(--d-base) var(--ease-standard)',
+      }}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
     >
+      {/* Decoration */}
+      <div aria-hidden="true" style={{ position: 'absolute', inset: 0, pointerEvents: 'none', opacity: hover ? 1 : 0.5, transition: 'opacity var(--d-base)' }}>
+        {decoration === 'futbol' && <FutbolPaneDeco color={accentColor} />}
+        {decoration === 'basket' && <BasketPaneDeco color={accentColor} />}
+      </div>
+
+      <div style={{ position: 'relative' }}>
+        <div style={{ height: 1, width: 48, background: accentColor, marginBottom: 18 }} />
+        <div className="eyebrow" style={{ marginBottom: 22 }}>{eyebrow}</div>
+        <h3 className="h-1" style={{ marginBottom: 18, maxWidth: '14ch' }}>{title}</h3>
+        <p className="text-body muted" style={{ maxWidth: '40ch', marginBottom: 24 }}>{description}</p>
+        <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 8 }}>
+          {bullets.map((b) => (
+            <li key={b} className="text-small" style={{ color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ display: 'inline-block', width: 12, height: 1, background: 'var(--line-2)' }} />
+              {b}
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div style={{ position: 'relative', marginTop: 40, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <span className="row" style={{ font: '600 16px/1 var(--font-sans)', color: hover ? accentColor : 'var(--text)', transition: 'color var(--d-fast)' }}>
+          {ctaLabel} <IconArrow size={16} />
+        </span>
+        <span className="text-micro" style={{ color: 'var(--dim)' }}>01 / 02</span>
+      </div>
+    </Link>
+  );
+}
+
+/* ---------- decorations for the hub-split panes ------------------------ */
+function FutbolPaneDeco({ color }) {
+  return (
+    <svg viewBox="0 0 600 460" preserveAspectRatio="xMidYMid slice" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
       <defs>
-        <linearGradient id={`g-${uid}`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={primary} />
-          <stop offset="100%" stopColor={shadeHex(primary, -0.18)} />
-        </linearGradient>
-        <radialGradient id={`hi-${uid}`} cx="38%" cy="22%" r="80%">
-          <stop offset="0%" stopColor="rgba(255,255,255,0.22)" />
-          <stop offset="60%" stopColor="rgba(255,255,255,0)" />
+        <radialGradient id="fp-glow" cx="80%" cy="20%" r="60%">
+          <stop offset="0%" stopColor={color} stopOpacity="0.18" />
+          <stop offset="100%" stopColor={color} stopOpacity="0" />
         </radialGradient>
-        <linearGradient id={`shd-${uid}`} x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stopColor="rgba(0,0,0,0.22)" />
-          <stop offset="50%" stopColor="rgba(0,0,0,0)" />
-          <stop offset="100%" stopColor="rgba(0,0,0,0.22)" />
-        </linearGradient>
-        <clipPath id={`clip-${uid}`}><path d={BODY} /></clipPath>
       </defs>
-
-      {/* Base body */}
-      <path d={BODY} fill={`url(#g-${uid})`} />
-
-      {/* Patterns clipped to body */}
-      <g clipPath={`url(#clip-${uid})`}>
-        {pattern === 'stripes-v' && (
-          [0,1,2,3,4,5].map((i) => (
-            <rect key={i} x={20 + i * 30} y={0} width={14} height={H} fill={secondary} opacity={0.78} />
-          ))
-        )}
-        {pattern === 'stripes-h' && (
-          [0,1,2,3,4,5,6].map((i) => (
-            <rect key={i} x={0} y={40 + i * 30} width={W} height={14} fill={secondary} opacity={0.78} />
-          ))
-        )}
-        {pattern === 'half' && (
-          <rect x={W / 2} y={0} width={W / 2} height={H} fill={secondary} />
-        )}
-        {pattern === 'sash' && (
-          <polygon points={`0,140 ${W},40 ${W},80 0,180`} fill={secondary} opacity={0.85} />
-        )}
-      </g>
-
-      {/* Sleeve cuff stripes */}
-      <rect x={4} y={88} width={20} height={5} fill={cuffColor} />
-      <rect x={176} y={88} width={20} height={5} fill={cuffColor} />
-
-      {/* Collar — V-neck outline + inner fill ribbon */}
-      <path d="M70 26 L100 56 L130 26" fill="none" stroke={cuffColor} strokeWidth="3" strokeLinejoin="round" />
-      <path d="M73 28 L100 55 L127 28 Z" fill={cuffColor} opacity={0.35} />
-
-      {/* Highlight + edge shadow */}
-      <path d={BODY} fill={`url(#hi-${uid})`} pointerEvents="none" />
-      <path d={BODY} fill={`url(#shd-${uid})`} pointerEvents="none" opacity={0.4} />
-
-      {/* Body outline for definition */}
-      <path d={BODY} fill="none" stroke="rgba(0,0,0,0.25)" strokeWidth="0.8" />
-
-      {/* CONTENT — front vs back */}
-      {view === 'front' ? (
-        <>
-          {/* Crest badge — left chest panel */}
-          {crest && (
-            <g>
-              <rect x={60} y={86} width={36} height={42} rx={3} fill="rgba(0,0,0,0.22)" stroke="rgba(255,255,255,0.32)" strokeWidth="0.6" />
-              <text
-                x={78} y={111}
-                textAnchor="middle"
-                fontFamily="Playfair Display, serif"
-                fontWeight="800"
-                fontSize={crest.length >= 3 ? 13 : 17}
-                letterSpacing="-0.5"
-                fill={accent === '#fff' || accent === '#FFFFFF' ? '#fff' : accent}
-              >{crest}</text>
-              <text x={78} y={123} textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="4" letterSpacing="0.6" fill="rgba(255,255,255,0.7)">EST 2020</text>
-            </g>
-          )}
-          {/* Right-chest tag / sponsor block — small KB.SPOR plate */}
-          <g>
-            <rect x={114} y={92} width={42} height={14} fill="rgba(0,0,0,0.18)" />
-            <text x={135} y={102} textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontWeight="700" fontSize="6.5" letterSpacing="1.4" fill="rgba(255,255,255,0.9)">KB · SPOR</text>
-          </g>
-          {/* Optional small number under sponsor — gives the front character */}
-          {num && (
-            <text x={135} y={132} textAnchor="middle" fontFamily="Playfair Display, serif" fontWeight="800" fontSize="22" letterSpacing="-1" fill="rgba(255,255,255,0.92)">{num}</text>
-          )}
-        </>
-      ) : (
-        <>
-          {/* Back: NAME (upper back) + big NUMBER */}
-          {name && (
-            <text
-              x={W / 2} y={100}
-              textAnchor="middle"
-              fontFamily="Inter, sans-serif"
-              fontWeight="800"
-              fontSize={Math.max(8, 16 - Math.max(0, (name.length - 6)) * 0.8)}
-              letterSpacing="3"
-              fill={accent}
-            >{name.toUpperCase()}</text>
-          )}
-          {num && (
-            <text
-              x={W / 2} y={195}
-              textAnchor="middle"
-              fontFamily="Playfair Display, serif"
-              fontWeight="800"
-              fontSize={bigNumSize}
-              letterSpacing="-5"
-              fill="rgba(255,255,255,0.96)"
-            >{num}</text>
-          )}
-        </>
-      )}
-
-      {/* Hem brand strip — small KB tag at very bottom center */}
-      <rect x={W/2 - 24} y={232} width={48} height={9} fill="rgba(0,0,0,0.35)" />
-      <text x={W/2} y={239} textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontWeight="700" fontSize="5.5" letterSpacing="1.6" fill="rgba(255,255,255,0.85)">{brandTag}</text>
+      <rect width="600" height="460" fill="url(#fp-glow)" />
+      {/* pitch arc */}
+      <circle cx="540" cy="80" r="180" fill="none" stroke={color} strokeWidth="1" strokeOpacity="0.25" />
+      <circle cx="540" cy="80" r="100" fill="none" stroke={color} strokeWidth="1" strokeOpacity="0.18" />
+      <circle cx="540" cy="80" r="40" fill="none" stroke={color} strokeWidth="1" strokeOpacity="0.10" />
+      {/* corner flag triangles */}
+      <path d="M0 440 L40 440 L0 400 Z" fill={color} fillOpacity="0.10" />
+    </svg>
+  );
+}
+function BasketPaneDeco({ color }) {
+  return (
+    <svg viewBox="0 0 600 460" preserveAspectRatio="xMidYMid slice" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
+      <defs>
+        <radialGradient id="bp-glow" cx="85%" cy="80%" r="60%">
+          <stop offset="0%" stopColor={color} stopOpacity="0.18" />
+          <stop offset="100%" stopColor={color} stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      <rect width="600" height="460" fill="url(#bp-glow)" />
+      {/* hoop */}
+      <ellipse cx="510" cy="380" rx="80" ry="22" fill="none" stroke={color} strokeWidth="2" strokeOpacity="0.5" />
+      <ellipse cx="510" cy="380" rx="80" ry="22" fill="none" stroke={color} strokeWidth="1" strokeOpacity="0.20" transform="translate(0 -2)" />
+      {/* net */}
+      {[0,1,2,3,4,5,6,7,8].map((i) => (
+        <line key={i} x1={440 + i*16} y1="380" x2={450 + i*12 + 12} y2="440" stroke={color} strokeWidth="0.6" strokeOpacity="0.4" />
+      ))}
+      <line x1="430" y1="378" x2="590" y2="378" stroke={color} strokeWidth="1" strokeOpacity="0.18" />
     </svg>
   );
 }
 
-// Shade a hex color (positive = lighter, negative = darker). Used by both
-// JerseyArt and the builder; kept on window so it doesn't get re-declared
-// per Babel scope.
-function shadeHex(hex, amount) {
-  try {
-    const c = String(hex).replace('#', '');
-    const num = parseInt(c.length === 3 ? c.split('').map((x) => x + x).join('') : c, 16);
-    let r = (num >> 16) + Math.round(255 * amount);
-    let g = ((num >> 8) & 0xff) + Math.round(255 * amount);
-    let b = (num & 0xff) + Math.round(255 * amount);
-    r = Math.max(0, Math.min(255, r));
-    g = Math.max(0, Math.min(255, g));
-    b = Math.max(0, Math.min(255, b));
-    return '#' + ((r << 16) | (g << 8) | b).toString(16).padStart(6, '0');
-  } catch { return hex; }
-}
-
-/* JerseyChip — back-compat wrapper used in product cards. Same look as
- * JerseyArt, sized 4:5 to fit product grid tiles. */
-function JerseyChip({ primary = '#444', secondary = '#222', accent = '#fff', crest, num, pattern = 'plain', name, view = 'front', brandTag }) {
+/* ---------- WorldCard --------------------------------------------------- */
+function WorldCard({ to, eyebrow, title, body, tone, accent, transitionLabel, transitionSub, panelColor, panelText }) {
+  const palette = {
+    gold: { rule: '#d4af37', bg: 'radial-gradient(ellipse at center, rgba(212,175,55,0.06), transparent 60%)' },
+    neon: { rule: '#00f0ff', bg: 'radial-gradient(ellipse at center, rgba(0,240,255,0.08), transparent 60%)' },
+    kinetic: { rule: '#ff4d2e', bg: 'radial-gradient(ellipse at center, rgba(255,77,46,0.05), transparent 60%)' },
+  }[tone];
   return (
-    <div className="jersey-chip" style={{ background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <JerseyArt
-        primary={primary} secondary={secondary} accent={accent}
-        pattern={pattern} view={view}
-        crest={crest} num={num} name={name}
-        brandTag={brandTag}
-      />
-    </div>
-  );
-}
-
-/* ─────────────────────────── Reveal-on-mount ────────────────────────────── */
-// Simpler than IntersectionObserver: fade in shortly after mount, staggered by `delay`.
-// IO fails in capture contexts and reduced-motion environments — this is more reliable.
-function Reveal({ children, delay = 0, style, className = '' }) {
-  const [seen, setSeen] = useState(false);
-  useEffect(() => {
-    const t = setTimeout(() => setSeen(true), 30 + delay);
-    return () => clearTimeout(t);
-  }, [delay]);
-  return (
-    <div
-      className={className}
+    <Link
+      to={to}
+      transitionLabel={transitionLabel}
+      transitionSub={transitionSub}
+      panelColor={panelColor}
+      panelText={panelText}
       style={{
-        ...style,
-        opacity: seen ? 1 : 0,
-        transform: seen ? 'translateY(0)' : 'translateY(16px)',
-        transition: `opacity 700ms cubic-bezier(0,0,0.2,1), transform 700ms cubic-bezier(0,0,0.2,1)`,
+        position: 'relative', overflow: 'hidden',
+        background: 'var(--bg)',
+        padding: 'clamp(32px, 4vw, 48px)',
+        minHeight: 360,
+        display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+        transition: 'background var(--d-fast)',
       }}
+      onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-2)'}
+      onMouseLeave={(e) => e.currentTarget.style.background = 'var(--bg)'}
     >
-      {children}
-    </div>
+      <div aria-hidden="true" style={{ position: 'absolute', inset: 0, background: palette.bg, pointerEvents: 'none' }} />
+      <div style={{ position: 'relative' }}>
+        <div style={{ height: 1, width: 36, background: palette.rule, marginBottom: 18 }} />
+        <div className="eyebrow" style={{ marginBottom: 22, color: palette.rule }}>{eyebrow}</div>
+        <h3 className="h-2" style={{ marginBottom: 16, maxWidth: '14ch' }}>{title}</h3>
+        <p className="text-body muted" style={{ maxWidth: '36ch' }}>{body}</p>
+      </div>
+      <div style={{ position: 'relative', marginTop: 32, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+        {accent}
+        <span className="row" style={{ font: '600 14px/1 var(--font-sans)' }}>Keşfet <IconArrow size={14} /></span>
+      </div>
+    </Link>
   );
 }
 
-/* ─────────────────────────── Section / common chrome ────────────────────── */
-function Section({ children, eyebrow, heading, cta, className = '', style }) {
+function MaisonAccent() {
   return (
-    <section className={`container ${className}`} style={{ paddingBlock: 'clamp(64px, 9vw, 120px)', ...style }}>
-      {(eyebrow || heading || cta) && (
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 24, marginBottom: 40, flexWrap: 'wrap' }}>
-          <div>
-            {eyebrow && <div className="eyebrow" style={{ marginBottom: 14 }}>{eyebrow}</div>}
-            {heading && <h2 className="h-2" style={{ maxWidth: '24ch' }}>{heading}</h2>}
-          </div>
-          {cta}
-        </div>
-      )}
-      {children}
-    </section>
+    <svg width="92" height="92" viewBox="0 0 92 92">
+      <defs>
+        <radialGradient id="m-g" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#d4af37" stopOpacity="0.6" />
+          <stop offset="100%" stopColor="#d4af37" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      <circle cx="46" cy="46" r="40" fill="url(#m-g)" />
+      <circle cx="46" cy="46" r="36" fill="none" stroke="#d4af37" strokeWidth="0.8" />
+      <text x="46" y="51" textAnchor="middle" fontFamily="Playfair Display, serif" fontWeight="700" fontSize="14" fill="#d4af37" fontStyle="italic">Maison</text>
+      <text x="46" y="66" textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="7" letterSpacing="2" fill="#d4af37" opacity="0.7">N°001/12</text>
+    </svg>
+  );
+}
+function LabAccent() {
+  return (
+    <svg width="92" height="92" viewBox="0 0 92 92">
+      <rect x="6" y="6" width="80" height="80" fill="none" stroke="#00f0ff" strokeWidth="0.8" strokeDasharray="2 4" />
+      <path d="M20 20 H32 M20 20 V32 M72 20 H60 M72 20 V32 M20 72 H32 M20 72 V60 M72 72 H60 M72 72 V60" stroke="#00f0ff" strokeWidth="1.2" />
+      <text x="46" y="50" textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontWeight="700" fontSize="9" letterSpacing="2" fill="#00f0ff">// KB.LAB</text>
+      <text x="46" y="62" textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="6" letterSpacing="1.5" fill="#b1ff5b">RENDER_OK</text>
+    </svg>
+  );
+}
+function AtolyeAccent() {
+  return (
+    <svg width="92" height="92" viewBox="0 0 92 92">
+      <circle cx="46" cy="46" r="36" fill="none" stroke="#8b8b94" strokeWidth="0.6" />
+      {[0,1,2,3,4,5,6,7,8,9,10,11].map((i) => {
+        const a = (i / 12) * Math.PI * 2;
+        return <line key={i} x1={46 + Math.cos(a)*32} y1={46 + Math.sin(a)*32} x2={46 + Math.cos(a)*36} y2={46 + Math.sin(a)*36} stroke="#8b8b94" strokeWidth="0.8" />;
+      })}
+      <line x1="46" y1="46" x2="46" y2="26" stroke="#ff4d2e" strokeWidth="1.5" />
+      <line x1="46" y1="46" x2="62" y2="46" stroke="#f6f6f8" strokeWidth="1" />
+      <circle cx="46" cy="46" r="2" fill="#ff4d2e" />
+    </svg>
   );
 }
 
-/* Expose to global */
-Object.assign(window, {
-  // hooks/ctx
-  useHashRoute, useRouter, RouterCtx, useTransition, TransitionProvider,
-  useCart, CartProvider, useAuth, AuthProvider, MoodCtx, MoodFromRoute,
-  // components
-  BrandMark, Link, Header, Footer, Marquee, JerseyArt, JerseyChip, Reveal, Section,
-  // utils
-  shadeHex,
-  // icons
-  IconHeart, IconBag, IconUser, IconArrow, IconSearch, IconMenu, IconCheck, IconPlus, IconMinus, IconChevron,
-});
+Object.assign(window, { HubSporPage });

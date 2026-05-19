@@ -1,406 +1,340 @@
 /* =============================================================================
- * page-spor.jsx — KB Spor parent-brand hub (landing)
- * Mood: kinetic (default)
+ * page-pdp.jsx — Product detail page (forma)
+ * Works for any slug; pulls metadata from a dictionary so we can demo classic
+ * (editorial mood) and current-season (kinetic mood) variants from the same component.
  * ============================================================================= */
 
-const { useState: useStateSpor, useEffect: useEffectSpor, useRef: useRefSpor } = React;
+const { useState: useSP, useEffect: useEP } = React;
 
-const SPOR_FEATURED = [
-  { to: '/futbol/pdp/galatasaray', title: 'Galatasaray',   sub: 'Süper Lig · 26/27', price: '2.299,00 ₺', primary: '#A90432', secondary: '#FFB81C', accent: '#FFB81C', crest: 'GS', num: '10', pattern: 'half', tag: 'Süper Lig' },
-  { to: '/futbol/pdp/fenerbahce',  title: 'Fenerbahçe',     sub: 'Süper Lig · 26/27', price: '2.299,00 ₺', primary: '#0F3F8C', secondary: '#FCD116', accent: '#fff', crest: 'FB', num: '7',  pattern: 'stripes-v', tag: 'Süper Lig' },
-  { to: '/futbol/pdp/real-madrid', title: 'Real Madrid',    sub: 'La Liga · 26/27',   price: '2.599,00 ₺', primary: '#F5F5F5', secondary: '#FEBE10', accent: '#0a0a0b', crest: 'RM', num: '9',  pattern: 'plain', tag: 'La Liga' },
-  { to: '/futbol/pdp/barcelona',   title: 'Barcelona',     sub: 'La Liga · 26/27',   price: '2.599,00 ₺', primary: '#A50044', secondary: '#004D98', accent: '#FCD116', crest: 'FCB', num: '10', pattern: 'stripes-v', tag: 'La Liga' },
-  { to: '/futbol/klasik/mar86',    title: 'Maradona ’86',   sub: 'Maison KB',         price: '14.999,00 ₺', primary: '#75AADB', secondary: '#F6B40E', accent: '#0a0a0b', crest: 'ARG', num: '10', pattern: 'stripes-v', tag: 'Heritage' },
-  { to: '/futbol/klasik/zid98',    title: 'Zidane ’98',     sub: 'Maison KB',         price: '14.999,00 ₺', primary: '#0055A4', secondary: '#EF4135', accent: '#fff', crest: 'FRA', num: '10', pattern: 'plain', tag: 'Heritage' },
-  { to: '/basket/nba/lakers',      title: 'LA Lakers',     sub: 'NBA · 26/27',       price: '2.799,00 ₺', primary: '#552583', secondary: '#FDB927', accent: '#FDB927', crest: 'LAL', num: '23', pattern: 'plain', tag: 'NBA' },
-  { to: '/basket/bsl/anadolu-efes',title: 'Anadolu Efes',   sub: 'BSL · 26/27',       price: '2.499,00 ₺', primary: '#003478', secondary: '#FFFFFF', accent: '#fff', crest: 'EFS', num: '8',  pattern: 'half', tag: 'BSL' },
-];
+// Tiny catalog covering the slugs we link to from hubs/featured
+const PDP_CATALOG = {
+  galatasaray: { title: 'Galatasaray',   league: 'Süper Lig · 2026/27', primary: '#A90432', secondary: '#FFB81C', accent: '#FFB81C', crest: 'GS', num: '10', pattern: 'half',      price: '2.299,00 ₺', mood: 'futbol', context: 'futbol', city: 'İstanbul', stadium: 'Rams Park', story: 'Aslanların bu sezonki iç saha forması — kırmızı-sarı yarım renk bloklaması, italyan jakar kumaş, made-to-order üretim.' },
+  fenerbahce:  { title: 'Fenerbahçe',     league: 'Süper Lig · 2026/27', primary: '#0F3F8C', secondary: '#FCD116', accent: '#FCD116', crest: 'FB', num: '7',  pattern: 'stripes-v', price: '2.299,00 ₺', mood: 'futbol', context: 'futbol', city: 'İstanbul', stadium: 'Şükrü Saracoğlu', story: 'Lacivert-sarı şeritlerin yeniden yorumu — klasik kanaryalı kesim, prima jakar kumaş.' },
+  besiktas:    { title: 'Beşiktaş',       league: 'Süper Lig · 2026/27', primary: '#000000', secondary: '#FFFFFF', accent: '#fff', crest: 'BJK', num: '14', pattern: 'stripes-v', price: '2.299,00 ₺', mood: 'futbol', context: 'futbol', city: 'İstanbul', stadium: 'Tüpraş Stadyumu', story: 'Kartalın siyah-beyaz şeritleri, Boğaz manzaralı atölyede yeniden dokundu.' },
+  'real-madrid': { title: 'Real Madrid',  league: 'La Liga · 2026/27',   primary: '#F5F5F5', secondary: '#FEBE10', accent: '#0a0a0b', crest: 'RM', num: '9',  pattern: 'plain',      price: '2.599,00 ₺', mood: 'futbol', context: 'futbol', city: 'Madrid',  stadium: 'Santiago Bernabéu', story: 'Beyaz şehrin elitleri için — altın detaylar, ipek dokuma yaka, beyaz baz.' },
+  barcelona:   { title: 'Barcelona',      league: 'La Liga · 2026/27',   primary: '#A50044', secondary: '#004D98', accent: '#FCD116', crest: 'FCB', num: '10', pattern: 'stripes-v', price: '2.599,00 ₺', mood: 'futbol', context: 'futbol', city: 'Barcelona', stadium: 'Camp Nou', story: 'Blaugrana çizgilerinin son yorumu — derin bordo ve mavi, Katalan ipliğinden geçirilmiş.' },
+  liverpool:   { title: 'Liverpool',      league: 'Premier League',      primary: '#C8102E', secondary: '#00B2A9', accent: '#FAC03A', crest: 'LFC', num: '9',  pattern: 'plain',      price: '2.599,00 ₺', mood: 'futbol', context: 'futbol', city: 'Liverpool', stadium: 'Anfield', story: 'Mersey kıyısının kırmızısı — altın amblem, açık-deniz ipliği.' },
+  'man-city':  { title: 'Man City',       league: 'Premier League',      primary: '#6CABDD', secondary: '#1C2C5B', accent: '#fff', crest: 'MCI', num: '17', pattern: 'plain',      price: '2.599,00 ₺', mood: 'futbol', context: 'futbol', city: 'Manchester', stadium: 'Etihad', story: 'Sky blue — şehrin gökyüzünden ödünç alınmış bir renk.' },
+  arsenal:     { title: 'Arsenal',        league: 'Premier League',      primary: '#EF0107', secondary: '#FFFFFF', accent: '#fff', crest: 'ARS', num: '8',  pattern: 'plain',      price: '2.599,00 ₺', mood: 'futbol', context: 'futbol', city: 'London',  stadium: 'Emirates', story: 'Topçuların kırmızı-beyaz uniforması — Londra dikiş atölyesinden yorumlandı.' },
+  bayern:      { title: 'Bayern Münih',   league: 'Bundesliga',          primary: '#DC052D', secondary: '#0066B2', accent: '#fff', crest: 'FCB', num: '13', pattern: 'plain',      price: '2.499,00 ₺', mood: 'futbol', context: 'futbol', city: 'München', stadium: 'Allianz Arena', story: 'Bavyera kırmızısı, Alman dikiş hatları, savaş arabası kesimi.' },
+  juventus:    { title: 'Juventus',       league: 'Serie A',             primary: '#000000', secondary: '#FFFFFF', accent: '#fff', crest: 'JUV', num: '10', pattern: 'stripes-v', price: '2.499,00 ₺', mood: 'futbol', context: 'futbol', city: 'Torino',  stadium: 'Allianz Stadium', story: 'Zebreli klasik — Torino atölyesinin bir selamı.' },
+  psg:         { title: 'Paris SG',       league: 'Ligue 1',              primary: '#004170', secondary: '#DA291C', accent: '#fff', crest: 'PSG', num: '10', pattern: 'plain',      price: '2.599,00 ₺', mood: 'futbol', context: 'futbol', city: 'Paris',  stadium: 'Parc des Princes', story: 'Lacivert temel, kırmızı-beyaz kuşak — Hechter klasiği yeniden.' },
+  turkiye:     { title: 'Türkiye',        league: 'Milli Takım',          primary: '#E30A17', secondary: '#FFFFFF', accent: '#fff', crest: 'TR',  num: '10', pattern: 'plain',      price: '2.199,00 ₺', mood: 'futbol', context: 'futbol', city: 'Ay-Yıldız', stadium: 'Atatürk Olimpiyat', story: 'Ay-yıldızın taşıyıcısı — bayrağın kırmızısı, dokumanın saygısı.' },
+  trabzonspor: { title: 'Trabzonspor',    league: 'Süper Lig · 2026/27', primary: '#8E1538', secondary: '#1A3F94', accent: '#fff', crest: 'TS', num: '11', pattern: 'stripes-v', price: '2.299,00 ₺', mood: 'futbol', context: 'futbol', city: 'Trabzon', stadium: 'Şenol Güneş', story: 'Karadeniz dalgasının renkleri — bordo-mavi, dik yaka.' },
+  atletico:    { title: 'Atlético Madrid', league: 'La Liga',            primary: '#C8102E', secondary: '#FFFFFF', accent: '#fff', crest: 'ATM', num: '7',  pattern: 'stripes-v', price: '2.499,00 ₺', mood: 'futbol', context: 'futbol', city: 'Madrid',  stadium: 'Metropolitano', story: 'Indios rojiblancos — kırmızı-beyaz şerit, sokağın disiplini.' },
+  dortmund:    { title: 'Dortmund',       league: 'Bundesliga',          primary: '#FDE100', secondary: '#000000', accent: '#0a0a0b', crest: 'BVB', num: '9',  pattern: 'plain',      price: '2.499,00 ₺', mood: 'futbol', context: 'futbol', city: 'Dortmund', stadium: 'Westfalen', story: 'Sarı duvar — Westfalen tribünlerinin sesi formaya işlendi.' },
+  inter:       { title: 'Inter',          league: 'Serie A',             primary: '#0033A0', secondary: '#010E80', accent: '#fff', crest: 'INT', num: '10', pattern: 'stripes-v', price: '2.499,00 ₺', mood: 'futbol', context: 'futbol', city: 'Milano',  stadium: 'San Siro', story: 'Milano nerazzurri — siyah-mavi şeridin son hali.' },
 
-function HubSporPage() {
+  // Maison KB Classic
+  mar86: { title: 'Maradona ’86',     league: 'Maison KB · Heritage', primary: '#75AADB', secondary: '#F6B40E', accent: '#0a0a0b', crest: 'ARG', num: '10', pattern: 'stripes-v', price: '14.999,00 ₺', mood: 'editorial', context: 'classic', city: 'México', stadium: 'Estadio Azteca', story: 'Tanrı’nın eli ve futbol tarihinin en güzel solo koşusu. 22 Haziran 1986. 12 nüsha, numaralı sertifika.' },
+  zid98: { title: 'Zidane ’98',       league: 'Maison KB · Heritage', primary: '#0055A4', secondary: '#EF4135', accent: '#fff', crest: 'FRA', num: '10', pattern: 'plain', price: '14.999,00 ₺', mood: 'editorial', context: 'classic', city: 'Paris',  stadium: 'Stade de France', story: 'İki kafa. 27\'nci ve 45+1\'inci dakika. Sonra — taç. 12 nüsha, hand-stitched isim.' },
+
+  // Basket
+  lakers:      { title: 'LA Lakers',  league: 'NBA · 2026/27',  primary: '#552583', secondary: '#FDB927', accent: '#FDB927', crest: 'LAL', num: '23', pattern: 'plain', price: '2.799,00 ₺', mood: 'basket', context: 'basket', city: 'Los Angeles', stadium: 'Crypto.com Arena', story: 'Showtime\'ın renkleri — mor-altın, ipek kumaş, kolsuz parke kalıp.' },
+  warriors:    { title: 'Golden State', league: 'NBA · 2026/27', primary: '#1D428A', secondary: '#FFC72C', accent: '#FFC72C', crest: 'GSW', num: '30', pattern: 'plain', price: '2.799,00 ₺', mood: 'basket', context: 'basket', city: 'San Francisco', stadium: 'Chase Center', story: 'Körfez köprüsünün kahraman renkleri.' },
+  celtics:     { title: 'Boston Celtics', league: 'NBA · 2026/27', primary: '#007A33', secondary: '#BA9653', accent: '#BA9653', crest: 'BOS', num: '0', pattern: 'plain', price: '2.799,00 ₺', mood: 'basket', context: 'basket', city: 'Boston', stadium: 'TD Garden', story: 'Şampiyonun yeşili — bronz amblem ile.' },
+  efes:        { title: 'Anadolu Efes', league: 'BSL · 2026/27', primary: '#003478', secondary: '#FFFFFF', accent: '#fff', crest: 'EFS', num: '8', pattern: 'half', price: '2.499,00 ₺', mood: 'basket', context: 'basket', city: 'İstanbul', stadium: 'Sinan Erdem', story: 'Mavi-beyaz disiplin — Anadolu’nun parke devi.' },
+  'fb-beko':   { title: 'Fenerbahçe Beko', league: 'BSL · 2026/27', primary: '#0F3F8C', secondary: '#FCD116', accent: '#FCD116', crest: 'FBB', num: '4', pattern: 'stripes-h', price: '2.499,00 ₺', mood: 'basket', context: 'basket', city: 'İstanbul', stadium: 'Ülker Spor', story: 'Sarı-lacivert parke kimliği — yatay şerit yorumu.' },
+};
+
+const PDP_SIZES = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'];
+
+function PDPPage({ slug }) {
+  const p = PDP_CATALOG[slug];
+  const [size, setSize] = useSP('L');
+  const [qty, setQty] = useSP(1);
+  const [view, setView] = useSP('front'); // front | back
+  const [withName, setWithName] = useSP(false);
+  const [customName, setCustomName] = useSP('');
+  const [customNum, setCustomNum] = useSP('');
+  const [tab, setTab] = useSP('story');
+  const cart = useCart();
+
+  if (!p) {
+    return (
+      <div className="container" style={{ paddingBlock: 120, textAlign: 'center' }}>
+        <div className="eyebrow" style={{ marginBottom: 16, justifyContent: 'center' }}>BULUNAMADI</div>
+        <h1 className="h-1" style={{ maxWidth: '18ch', margin: '0 auto' }}>Bu forma envantere yüklenmemiş.</h1>
+        <p className="muted" style={{ marginTop: 16 }}>Aradığınız parça bir koleksiyon parçası ya da yakında. Hub'a dönüp seçebilirsiniz.</p>
+        <Link to="/futbol" className="btn btn-primary" style={{ marginTop: 32 }}>KB Futbol'a dön <IconArrow size={14} /></Link>
+      </div>
+    );
+  }
+
+  const isEditorial = p.mood === 'editorial';
+
   return (
-    <div style={{ paddingTop: 0 }}>
-
-      {/* =================================================================
-            HERO — split editorial layout. Big italic word "aitsiniz."
-         ================================================================= */}
-      <section style={{ position: 'relative', overflow: 'hidden', minHeight: '92vh', display: 'flex', alignItems: 'center' }}>
-        {/* decorative bg layers */}
-        <div aria-hidden="true" style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
-          <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 60% 40% at 20% 30%, rgba(255,77,46,0.16), transparent 60%)' }} />
-          <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 50% 50% at 90% 80%, rgba(0,240,255,0.08), transparent 60%)' }} />
-          <div className="bg-grid" style={{ position: 'absolute', inset: 0 }} />
+    <div>
+      {/* Breadcrumb */}
+      <div className="container" style={{ paddingBlock: '24px 0', borderBottom: '1px solid var(--line)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--muted)', paddingBottom: 18 }}>
+          <Link to="/" style={{ color: 'var(--muted)' }}>KB Spor</Link>
+          <IconChevron size={11} />
+          <Link to={p.context === 'basket' ? '/basket' : p.context === 'classic' ? '/futbol/klasik' : '/futbol'} style={{ color: 'var(--muted)' }}>
+            {p.context === 'basket' ? 'KB Basket' : p.context === 'classic' ? 'Maison KB' : 'KB Futbol'}
+          </Link>
+          <IconChevron size={11} />
+          <span style={{ color: 'var(--text)' }}>{p.title}</span>
         </div>
+      </div>
 
-        {/* big background number */}
-        <div aria-hidden="true" style={{ position: 'absolute', right: 'calc(-1 * var(--gut))', top: '6vh', pointerEvents: 'none' }}>
-          <span className="big-num">26<span style={{ color: 'var(--accent)', WebkitTextStroke: 0 }}>/</span>27</span>
-        </div>
+      {/* MAIN */}
+      <section className="container" style={{ paddingBlock: 'clamp(40px, 5vw, 80px)' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 1fr', gap: 64, alignItems: 'flex-start' }} className="pdp-grid">
 
-        <div className="container" style={{ position: 'relative', width: '100%', display: 'grid', gridTemplateColumns: '1fr', gap: 32, paddingBlock: 'clamp(72px, 11vw, 140px)' }}>
-          <Reveal>
-            <div className="eyebrow"><span className="eyebrow-dot" />YENİ SEZON · FW 26 / 27 · İSTANBUL</div>
-          </Reveal>
+          {/* GALLERY */}
+          <div style={{ position: 'sticky', top: 100 }}>
+            <div style={{ position: 'relative', background: isEditorial ? 'linear-gradient(135deg, rgba(212,175,55,0.08), transparent 60%)' : 'var(--bg-2)', minHeight: 600, padding: 'clamp(28px, 4vw, 56px)', border: '1px solid var(--line)', display: 'grid', placeItems: 'center' }}>
+              {/* corner labels */}
+              <div style={{ position: 'absolute', top: 14, left: 18, fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.18em', color: isEditorial ? 'var(--accent)' : 'var(--muted)' }}>
+                {view.toUpperCase()} · {p.league.toUpperCase()}
+              </div>
+              <div style={{ position: 'absolute', top: 14, right: 18, fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.18em', color: isEditorial ? 'var(--accent)' : 'var(--muted)' }}>
+                {p.city.toUpperCase()} · {p.stadium.toUpperCase()}
+              </div>
 
-          <Reveal delay={120}>
-            <h1 className="h-display" style={{ maxWidth: '14ch' }}>
-              Sahaya<br />
-              <span className="italic-display" style={{ color: 'var(--accent)' }}>aitsiniz.</span><br />
-              Formayı siz seçin.
-            </h1>
-          </Reveal>
+              <div style={{ position: 'relative', width: '70%', maxWidth: 420 }}>
+                <JerseyChip
+                  primary={p.primary}
+                  secondary={p.secondary}
+                  accent={p.accent}
+                  crest={p.crest}
+                  num={view === 'back' ? (withName && customNum ? customNum : p.num) : p.num}
+                  pattern={p.pattern}
+                  view={view}
+                  name={withName && customName ? customName.toUpperCase() : (view === 'back' ? p.title.toUpperCase() : null)}
+                />
+                {isEditorial && (
+                  <>
+                    <div style={{ position: 'absolute', inset: -12, border: '1px solid var(--accent)', opacity: 0.45 }} />
+                    <div style={{ position: 'absolute', inset: -20, border: '1px solid var(--accent)', opacity: 0.2 }} />
+                  </>
+                )}
+              </div>
 
-          <Reveal delay={240}>
-            <p className="text-lead muted" style={{ maxWidth: '58ch' }}>
-              Avrupa'nın en büyük kulüpleri ve milli takımlardan ilham alan, İtalyan kumaşıyla İstanbul'da dokunan formalar. Ya da kendi renginizi, kendi numaranızı taşıyan tek parçayı tasarlayın.
-            </p>
-          </Reveal>
-
-          <Reveal delay={360}>
-            <div className="row" style={{ flexWrap: 'wrap', gap: 12, marginTop: 12 }}>
-              <Link to="/futbol" className="btn btn-primary btn-lg" transitionLabel="KB FUTBOL" transitionSub="Crafted for Champions" panelColor="#0a0a0b" panelText="#ff4d2e">
-                Futbol koleksiyonu <IconArrow size={16} />
-              </Link>
-              <Link to="/basket" className="btn btn-ghost btn-lg" transitionLabel="KB BASKET" transitionSub="Parke. Çember. Bir takım." panelColor="#0a0a0b" panelText="#ff7a23">
-                Basket koleksiyonu <IconArrow size={16} />
-              </Link>
-              <Link to="/futbol/builder" className="btn-quiet" transitionLabel="KB.LAB" transitionSub="// SYSTEM ONLINE" panelColor="#06080c" panelText="#00f0ff" style={{ marginLeft: 8, fontFamily: 'var(--font-mono)', fontSize: 12, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--muted)' }}>
-                // KB.LAB'da kendinizinkini tasarlayın <IconArrow size={14} />
-              </Link>
-            </div>
-          </Reveal>
-
-          {/* live status row — KB-style scoreboard */}
-          <Reveal delay={480}>
-            <div className="row" style={{ marginTop: 40, flexWrap: 'wrap', gap: 12 }}>
-              <div className="scoreboard">
-                <div className="seg is-live"><span className="lbl">CANLI</span><span className="val">ATÖLYE</span></div>
-                <div className="seg"><span className="lbl">SİPARİŞ</span><span className="val">142 / GÜN</span></div>
-                <div className="seg"><span className="lbl">ÜRETİM</span><span className="val">7–14 GÜN</span></div>
-                <div className="seg"><span className="lbl">KARGO</span><span className="val">1–3 GÜN</span></div>
-                <div className="seg"><span className="lbl">KDV</span><span className="val">DAHİL %20</span></div>
+              <div style={{ position: 'absolute', bottom: 14, left: 18, fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.18em', color: isEditorial ? 'var(--accent)' : 'var(--muted)' }}>
+                {isEditorial ? `N° 03 / 12 NÜSHA` : 'KB.PDP'}
               </div>
             </div>
-          </Reveal>
-        </div>
-      </section>
 
-      <Marquee items={[
-        'CRAFTED FOR CHAMPIONS', { text: 'KB SPOR', hi: true }, 'EST 2020', 'İSTANBUL', 'FW 26 / 27', 'MAISON KB', 'KB.LAB', 'MADE-TO-ORDER', 'İTALYAN KUMAŞ',
-      ]} />
+            {/* View thumbs */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 16 }}>
+              {['front', 'back'].map((v) => (
+                <button key={v} onClick={() => setView(v)} style={{
+                  padding: '14px', background: view === v ? 'var(--surface)' : 'transparent', border: '1px solid', borderColor: view === v ? 'var(--accent)' : 'var(--line)',
+                  font: '600 11px/1 var(--font-mono)', letterSpacing: '0.16em', textTransform: 'uppercase',
+                  color: view === v ? 'var(--accent)' : 'var(--muted)',
+                }}>
+                  {v === 'front' ? 'ÖN' : 'ARKA'}
+                </button>
+              ))}
+            </div>
+          </div>
 
-      {/* =================================================================
-            HUB SPLIT — Futbol / Basket
-         ================================================================= */}
-      <section className="container" style={{ paddingBlock: 'clamp(60px, 8vw, 100px)' }}>
-        <Reveal>
-          <div className="eyebrow" style={{ marginBottom: 18 }}>İKİ DESTİNASYON · BİR SEPET</div>
-          <h2 className="h-2" style={{ maxWidth: '20ch', marginBottom: 56 }}>Spordan iki dil. <span className="italic-display muted">Aynı dokuma.</span></h2>
-        </Reveal>
+          {/* DETAILS */}
+          <div>
+            <div className="eyebrow" style={{ marginBottom: 14, color: isEditorial ? 'var(--accent)' : 'var(--muted)' }}>{p.league}</div>
+            <h1 className="h-1" style={{ marginBottom: 12, fontStyle: isEditorial ? 'italic' : 'normal' }}>{p.title}</h1>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, background: 'var(--line)' }} className="hub-split-grid">
-          <HubSplitPane
-            to="/futbol"
-            eyebrow="KB FUTBOL"
-            title="Saha. Tribün. Bir parça."
-            description="Avrupa'nın en iyi kulüpleri, milli takımlar, klasikler ve sizin için tek parça forma. Krampon ve top koleksiyonu da burada."
-            bullets={['Klasik · Takım · Ülke formaları (made-to-order)', 'Krampon, top, antrenman aksesuarları', 'KB.LAB — 3D custom forma tasarımı']}
-            accentColor="#ff4d2e"
-            ctaLabel="KB Futbol'a gir"
-            transitionLabel="KB FUTBOL"
-            transitionSub="Crafted for Champions"
-            panelColor="#0a0a0b"
-            panelText="#ff4d2e"
-            decoration="futbol"
-          />
-          <HubSplitPane
-            to="/basket"
-            eyebrow="KB BASKET"
-            title="Parke. Çember. Bir takım."
-            description="NBA ve BSL takımlarının formaları, profesyonel basketbol topları, ve yakında — performans ayakkabısı."
-            bullets={['NBA ve BSL takım formaları (made-to-order)', 'Profesyonel basketbol topları (gerçek stok)', 'Basketbol ayakkabısı — yakında']}
-            accentColor="#ff7a23"
-            ctaLabel="KB Basket'a gir"
-            transitionLabel="KB BASKET"
-            transitionSub="Parke. Çember. Bir takım."
-            panelColor="#0a0a0b"
-            panelText="#ff7a23"
-            decoration="basket"
-          />
-        </div>
-      </section>
+            {/* Lead-time banner */}
+            <div style={{ marginTop: 10, marginBottom: 28, padding: '14px 18px', border: '1px solid var(--line)', background: 'var(--bg-2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 10, fontFamily: 'var(--font-mono)', fontSize: 12, letterSpacing: '0.06em', color: 'var(--text)' }}>
+                <span style={{ display: 'inline-block', width: 8, height: 8, background: 'var(--accent)', borderRadius: '50%', boxShadow: '0 0 8px var(--accent)' }} />
+                MADE-TO-ORDER
+              </span>
+              <span className="text-small muted">Üretim 7–14 gün · Kargo 1–3 gün · KDV %20 dahil</span>
+            </div>
 
-      {/* =================================================================
-            THREE WORLDS — Maison KB, KB.LAB, Atölye narrative
-         ================================================================= */}
-      <section className="container" style={{ paddingBlock: 'clamp(40px, 6vw, 80px)' }}>
-        <Reveal>
-          <div className="eyebrow" style={{ marginBottom: 18 }}>ÜÇ DÜNYA · BİR ATÖLYE</div>
-          <h2 className="h-2" style={{ maxWidth: '20ch', marginBottom: 56 }}>Hangi koltukta oturmak istersiniz?</h2>
-        </Reveal>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1, background: 'var(--line)' }} className="three-worlds-grid">
-          <WorldCard
-            to="/futbol/klasik"
-            eyebrow="MAISON KB · HERITAGE"
-            title="Bir kez dokunmuş."
-            body="Maradona '86, Zidane '98, Cristiano '07. Numaralandırılmış, sertifikalandırılmış, el işçiliğiyle yeniden dokunmuş efsane formalar."
-            tone="gold"
-            transitionLabel="MAISON KB"
-            transitionSub="Heritage · Crafted Once"
-            panelColor="#050403"
-            panelText="#d4af37"
-            accent={<MaisonAccent />}
-          />
-          <WorldCard
-            to="/futbol/builder"
-            eyebrow="// KB.LAB"
-            title="Tek parça spesifikasyon."
-            body="4 şablon, 3 kumaş, sınırsız renk. Gerçek zamanlı 3D — paylaşabileceğiniz bir URL ile saklayın, üretime gönderin."
-            tone="neon"
-            transitionLabel="KB.LAB"
-            transitionSub="// SYSTEM ONLINE"
-            panelColor="#06080c"
-            panelText="#00f0ff"
-            accent={<LabAccent />}
-          />
-          <WorldCard
-            to="/atolye"
-            eyebrow="ATÖLYE · BEŞİKTAŞ"
-            title="Önce ip, sonra forma."
-            body="Levent Atölye'de her forma elle dikilir. Sipariş geldikten 7–14 gün sonra üretim biter, 1–3 gün sonra kapınızda."
-            tone="kinetic"
-            accent={<AtolyeAccent />}
-          />
-        </div>
-      </section>
-
-      {/* =================================================================
-            FEATURED DROPS — combined products from both hubs
-         ================================================================= */}
-      <Section
-        eyebrow="ÖNE ÇIKANLAR · BU HAFTA"
-        heading={<>Bu hafta <span className="italic-display muted">vitrinde</span>.</>}
-        cta={<Link to="/futbol" className="btn-quiet"><span style={{ font: '600 13px/1 var(--font-sans)' }}>Tüm koleksiyon</span> <IconArrow className="arrow" size={14} /></Link>}
-      >
-        <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1, background: 'var(--line)' }} className="featured-grid">
-          {SPOR_FEATURED.map((item, i) => (
-            <li key={item.to} className="product-card" style={{ position: 'relative', padding: 22 }}>
-              <Link to={item.to}>
-                <span className="league-tag">{item.tag}</span>
-                <JerseyChip primary={item.primary} secondary={item.secondary} accent={item.accent} crest={item.crest} num={item.num} pattern={item.pattern} />
-                <div className="title">{item.title}</div>
-                <div className="sub">{item.sub}</div>
-                <div className="price">{item.price}</div>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </Section>
-
-      {/* =================================================================
-            VOICE / Strapline closer
-         ================================================================= */}
-      <section className="full-bleed" style={{ borderTop: '1px solid var(--line)', borderBottom: '1px solid var(--line)', padding: 'clamp(80px, 12vw, 160px) var(--gut)', background: 'var(--bg-2)' }}>
-        <div className="container" style={{ textAlign: 'center', padding: 0 }}>
-          <Reveal>
-            <div className="eyebrow" style={{ marginBottom: 20 }}>STRAPLINE · EST 2020</div>
-            <h2 className="h-display" style={{ maxWidth: '14ch', margin: '0 auto', textAlign: 'center' }}>
-              <span className="italic-display">Şampiyonlar</span> için<br />dokunmuş.
-            </h2>
-            <p className="text-lead muted" style={{ maxWidth: '52ch', margin: '32px auto 0' }}>
-              Made-to-order. İtalyan kumaşı. İstanbul'da, Levent atölyesinde tek tek üretilir. Stok yok — sadece sizin için dokunan parça.
+            <p className="text-body" style={{ color: 'var(--text)', opacity: 0.88, maxWidth: '54ch', fontStyle: isEditorial ? 'italic' : 'normal', fontFamily: isEditorial ? 'var(--font-serif)' : 'var(--font-sans)' }}>
+              {p.story}
             </p>
-          </Reveal>
+
+            {/* Price */}
+            <div style={{ marginTop: 32, marginBottom: 32, display: 'flex', alignItems: 'baseline', gap: 16 }}>
+              <span style={{ font: '700 clamp(28px, 3vw, 42px)/1 var(--font-display)', fontStyle: isEditorial ? 'italic' : 'normal', color: isEditorial ? 'var(--accent)' : 'var(--text)' }}>{p.price}</span>
+              <span className="text-small muted">KDV dahil</span>
+            </div>
+
+            {/* Size picker */}
+            <div style={{ marginBottom: 32 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+                <span className="text-micro" style={{ color: 'var(--muted)' }}>BEDEN</span>
+                <Link to="/yardim/beden" className="btn-quiet" style={{ font: '600 11px/1 var(--font-mono)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>Beden tablosu <IconArrow className="arrow" size={11} /></Link>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 6 }}>
+                {PDP_SIZES.map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => setSize(s)}
+                    style={{
+                      padding: '14px 0', font: '700 13px/1 var(--font-mono)', letterSpacing: '0.04em',
+                      border: '1px solid', borderColor: size === s ? (isEditorial ? 'var(--accent)' : 'var(--accent)') : 'var(--line)',
+                      background: size === s ? (isEditorial ? 'rgba(212,175,55,0.08)' : 'var(--surface)') : 'transparent',
+                      color: size === s ? (isEditorial ? 'var(--accent)' : 'var(--accent)') : 'var(--text)',
+                    }}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Name/number printing (futbol/basket only, not Maison) */}
+            {!isEditorial && (
+              <div style={{ marginBottom: 32, padding: 18, border: '1px solid var(--line)', background: 'var(--bg-2)' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
+                  <input type="checkbox" checked={withName} onChange={(e) => setWithName(e.target.checked)} style={{ width: 16, height: 16, accentColor: 'var(--accent)' }} />
+                  <span style={{ font: '600 13px/1 var(--font-mono)', letterSpacing: '0.04em' }}>İSİM · NUMARA BASKILI</span>
+                  <span className="text-caption muted" style={{ marginLeft: 'auto' }}>+ 150,00 ₺</span>
+                </label>
+                {withName && (
+                  <div style={{ marginTop: 14, display: 'grid', gridTemplateColumns: '1fr 90px', gap: 8 }}>
+                    <input
+                      type="text" placeholder="İSİM" value={customName} maxLength={12}
+                      onChange={(e) => setCustomName(e.target.value.toUpperCase())}
+                      style={{ padding: '12px 14px', background: 'var(--bg)', border: '1px solid var(--line)', font: '700 14px/1 var(--font-mono)', letterSpacing: '0.04em', color: 'var(--text)' }}
+                    />
+                    <input
+                      type="text" placeholder="NO" value={customNum} maxLength={2}
+                      onChange={(e) => setCustomNum(e.target.value.replace(/\D/g, '').slice(0,2))}
+                      style={{ padding: '12px 14px', background: 'var(--bg)', border: '1px solid var(--line)', font: '700 14px/1 var(--font-mono)', letterSpacing: '0.04em', color: 'var(--text)', textAlign: 'center' }}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Quantity + Add */}
+            <div style={{ display: 'flex', gap: 10, marginBottom: 24 }}>
+              <div style={{ display: 'flex', alignItems: 'center', border: '1px solid var(--line)', height: 56 }}>
+                <button onClick={() => setQty((q) => Math.max(1, q - 1))} style={{ width: 44, height: '100%', color: 'var(--muted)' }} aria-label="Azalt"><IconMinus size={14} /></button>
+                <span style={{ width: 36, textAlign: 'center', font: '600 14px/1 var(--font-mono)' }}>{qty}</span>
+                <button onClick={() => setQty((q) => q + 1)} style={{ width: 44, height: '100%', color: 'var(--muted)' }} aria-label="Artır"><IconPlus size={14} /></button>
+              </div>
+              <button
+                className="btn btn-primary btn-lg"
+                style={{ flex: 1, height: 56, ...(isEditorial ? { background: 'var(--accent)', color: 'var(--bg)' } : null) }}
+                onClick={() => cart.add()}
+              >
+                {isEditorial ? 'Sertifika başvurusu' : 'Sepete ekle'} · {p.price}
+              </button>
+              <button className="btn btn-ghost btn-lg" style={{ height: 56, width: 56, padding: 0 }} aria-label="Favorilere ekle" onClick={() => cart.fav()}>
+                <IconHeart size={18} />
+              </button>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 40 }}>
+              <Mini lbl="ÜRETİM" val="7–14 GÜN" />
+              <Mini lbl="KARGO" val="1–3 GÜN" />
+              <Mini lbl="İADE" val="14 GÜN" />
+            </div>
+
+            {/* Tabs */}
+            <div style={{ borderTop: '1px solid var(--line)', paddingTop: 24 }}>
+              <div style={{ display: 'flex', gap: 0, marginBottom: 24, borderBottom: '1px solid var(--line)' }}>
+                {[
+                  { id: 'story', label: 'Hikâye' },
+                  { id: 'fabric', label: 'Kumaş' },
+                  { id: 'care', label: 'Bakım' },
+                  { id: 'ship', label: 'Kargo & İade' },
+                ].map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => setTab(t.id)}
+                    style={{
+                      padding: '14px 18px', font: '600 12px/1 var(--font-mono)', letterSpacing: '0.16em', textTransform: 'uppercase',
+                      color: tab === t.id ? 'var(--accent)' : 'var(--muted)',
+                      borderBottom: tab === t.id ? '1px solid var(--accent)' : '1px solid transparent',
+                      marginBottom: -1,
+                    }}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+              <div style={{ minHeight: 120 }}>
+                {tab === 'story' && (
+                  <p className="text-body muted" style={{ maxWidth: '52ch' }}>
+                    {p.story} Her parça siparişten sonra atölyemizde dokunur — ilk olmadan üretmiyoruz. Bu yüzden 7-14 gün üretim süresi gerekiyor, ama buna karşılık bedeniniz size özel.
+                  </p>
+                )}
+                {tab === 'fabric' && (
+                  <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 14 }}>
+                    <li className="text-small"><strong style={{ color: 'var(--text)' }}>Üst:</strong> <span className="muted">{isEditorial ? 'İtalyan jakar · Como bölgesi · 280 g/m²' : 'Performans polyester · İtalyan tedarik · 240 g/m²'}</span></li>
+                    <li className="text-small"><strong style={{ color: 'var(--text)' }}>Astar:</strong> <span className="muted">Mesh yapı · ter geçişi</span></li>
+                    <li className="text-small"><strong style={{ color: 'var(--text)' }}>Etiket:</strong> <span className="muted">Atölyede dokunmuş etiket · KB.SPOR</span></li>
+                    <li className="text-small"><strong style={{ color: 'var(--text)' }}>Dikim:</strong> <span className="muted">Düz dikiş yan, omuzda taşıyıcı bant</span></li>
+                  </ul>
+                )}
+                {tab === 'care' && (
+                  <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 10 }}>
+                    <li className="text-small muted">30°C ters yüz yıkayın, ütüleme yapmayın.</li>
+                    <li className="text-small muted">Beyazlatıcı kullanmayın. Kuru temizleme önerilmez.</li>
+                    <li className="text-small muted">Baskıyı korumak için ters yüz kurutun.</li>
+                  </ul>
+                )}
+                {tab === 'ship' && (
+                  <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 10 }}>
+                    <li className="text-small muted">Yurt içi tüm siparişlerde Yurtiçi Kargo ile teslimat.</li>
+                    <li className="text-small muted">14 gün içinde iade hakkı (baskısız formalar için).</li>
+                    <li className="text-small muted">İsim/numara baskılı formalar üretildikten sonra iade edilemez.</li>
+                  </ul>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       </section>
+
+      {/* Related — quietly pulled from same context */}
+      <Related current={slug} ctx={p.context} />
 
       <style>{`
         @media (max-width: 900px) {
-          .hub-split-grid, .three-worlds-grid { grid-template-columns: 1fr !important; }
-          .featured-grid { grid-template-columns: repeat(2, 1fr) !important; }
-        }
-        @media (max-width: 540px) {
-          .featured-grid { grid-template-columns: 1fr !important; }
+          .pdp-grid { grid-template-columns: 1fr !important; gap: 32px !important; }
+          .pdp-grid > div:first-child { position: relative !important; }
         }
       `}</style>
     </div>
   );
 }
 
-/* ---------- HubSplitPane ----------------------------------------------- */
-function HubSplitPane({ to, eyebrow, title, description, bullets, accentColor, ctaLabel, transitionLabel, transitionSub, panelColor, panelText, decoration }) {
-  const [hover, setHover] = useStateSpor(false);
+function Mini({ lbl, val }) {
   return (
-    <Link
-      to={to}
-      transitionLabel={transitionLabel}
-      transitionSub={transitionSub}
-      panelColor={panelColor}
-      panelText={panelText}
-      className="hub-pane"
-      style={{
-        position: 'relative', overflow: 'hidden',
-        background: hover ? 'var(--bg-2)' : 'var(--bg)',
-        padding: 'clamp(36px, 5vw, 64px)',
-        minHeight: 460,
-        display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-        transition: 'all var(--d-base) var(--ease-standard)',
-      }}
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
-    >
-      {/* Decoration */}
-      <div aria-hidden="true" style={{ position: 'absolute', inset: 0, pointerEvents: 'none', opacity: hover ? 1 : 0.5, transition: 'opacity var(--d-base)' }}>
-        {decoration === 'futbol' && <FutbolPaneDeco color={accentColor} />}
-        {decoration === 'basket' && <BasketPaneDeco color={accentColor} />}
-      </div>
-
-      <div style={{ position: 'relative' }}>
-        <div style={{ height: 1, width: 48, background: accentColor, marginBottom: 18 }} />
-        <div className="eyebrow" style={{ marginBottom: 22 }}>{eyebrow}</div>
-        <h3 className="h-1" style={{ marginBottom: 18, maxWidth: '14ch' }}>{title}</h3>
-        <p className="text-body muted" style={{ maxWidth: '40ch', marginBottom: 24 }}>{description}</p>
-        <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 8 }}>
-          {bullets.map((b) => (
-            <li key={b} className="text-small" style={{ color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ display: 'inline-block', width: 12, height: 1, background: 'var(--line-2)' }} />
-              {b}
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      <div style={{ position: 'relative', marginTop: 40, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <span className="row" style={{ font: '600 16px/1 var(--font-sans)', color: hover ? accentColor : 'var(--text)', transition: 'color var(--d-fast)' }}>
-          {ctaLabel} <IconArrow size={16} />
-        </span>
-        <span className="text-micro" style={{ color: 'var(--dim)' }}>01 / 02</span>
-      </div>
-    </Link>
+    <div style={{ padding: 14, border: '1px solid var(--line)', textAlign: 'center' }}>
+      <div className="text-micro" style={{ color: 'var(--muted)', marginBottom: 4 }}>{lbl}</div>
+      <div style={{ font: '700 12px/1 var(--font-mono)', color: 'var(--accent)' }}>{val}</div>
+    </div>
   );
 }
 
-/* ---------- decorations for the hub-split panes ------------------------ */
-function FutbolPaneDeco({ color }) {
+function Related({ current, ctx }) {
+  const items = Object.entries(PDP_CATALOG)
+    .filter(([slug, v]) => v.context === ctx && slug !== current)
+    .slice(0, 4);
+  if (!items.length) return null;
   return (
-    <svg viewBox="0 0 600 460" preserveAspectRatio="xMidYMid slice" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
-      <defs>
-        <radialGradient id="fp-glow" cx="80%" cy="20%" r="60%">
-          <stop offset="0%" stopColor={color} stopOpacity="0.18" />
-          <stop offset="100%" stopColor={color} stopOpacity="0" />
-        </radialGradient>
-      </defs>
-      <rect width="600" height="460" fill="url(#fp-glow)" />
-      {/* pitch arc */}
-      <circle cx="540" cy="80" r="180" fill="none" stroke={color} strokeWidth="1" strokeOpacity="0.25" />
-      <circle cx="540" cy="80" r="100" fill="none" stroke={color} strokeWidth="1" strokeOpacity="0.18" />
-      <circle cx="540" cy="80" r="40" fill="none" stroke={color} strokeWidth="1" strokeOpacity="0.10" />
-      {/* corner flag triangles */}
-      <path d="M0 440 L40 440 L0 400 Z" fill={color} fillOpacity="0.10" />
-    </svg>
-  );
-}
-function BasketPaneDeco({ color }) {
-  return (
-    <svg viewBox="0 0 600 460" preserveAspectRatio="xMidYMid slice" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
-      <defs>
-        <radialGradient id="bp-glow" cx="85%" cy="80%" r="60%">
-          <stop offset="0%" stopColor={color} stopOpacity="0.18" />
-          <stop offset="100%" stopColor={color} stopOpacity="0" />
-        </radialGradient>
-      </defs>
-      <rect width="600" height="460" fill="url(#bp-glow)" />
-      {/* hoop */}
-      <ellipse cx="510" cy="380" rx="80" ry="22" fill="none" stroke={color} strokeWidth="2" strokeOpacity="0.5" />
-      <ellipse cx="510" cy="380" rx="80" ry="22" fill="none" stroke={color} strokeWidth="1" strokeOpacity="0.20" transform="translate(0 -2)" />
-      {/* net */}
-      {[0,1,2,3,4,5,6,7,8].map((i) => (
-        <line key={i} x1={440 + i*16} y1="380" x2={450 + i*12 + 12} y2="440" stroke={color} strokeWidth="0.6" strokeOpacity="0.4" />
-      ))}
-      <line x1="430" y1="378" x2="590" y2="378" stroke={color} strokeWidth="1" strokeOpacity="0.18" />
-    </svg>
+    <section className="container" style={{ paddingBlock: 'clamp(60px, 8vw, 100px)' }}>
+      <div className="eyebrow" style={{ marginBottom: 14 }}>BİRLİKTE BAKILDI</div>
+      <h2 className="h-2" style={{ marginBottom: 32 }}>Benzer parçalar.</h2>
+      <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1, background: 'var(--line)' }} className="related-grid">
+        {items.map(([slug, p]) => (
+          <li key={slug} className="product-card" style={{ padding: 22, background: 'var(--bg)', position: 'relative' }}>
+            <Link to={`/${ctx === 'basket' ? 'basket' : 'futbol'}/pdp/${slug}`}>
+              <span className="league-tag">{p.league.split('·')[0]}</span>
+              <JerseyChip primary={p.primary} secondary={p.secondary} accent={p.accent} crest={p.crest} num={p.num} pattern={p.pattern} />
+              <div className="title">{p.title}</div>
+              <div className="sub">{p.league}</div>
+              <div className="price">{p.price}</div>
+            </Link>
+          </li>
+        ))}
+      </ul>
+      <style>{`
+        @media (max-width: 720px) { .related-grid { grid-template-columns: repeat(2, 1fr) !important; } }
+      `}</style>
+    </section>
   );
 }
 
-/* ---------- WorldCard --------------------------------------------------- */
-function WorldCard({ to, eyebrow, title, body, tone, accent, transitionLabel, transitionSub, panelColor, panelText }) {
-  const palette = {
-    gold: { rule: '#d4af37', bg: 'radial-gradient(ellipse at center, rgba(212,175,55,0.06), transparent 60%)' },
-    neon: { rule: '#00f0ff', bg: 'radial-gradient(ellipse at center, rgba(0,240,255,0.08), transparent 60%)' },
-    kinetic: { rule: '#ff4d2e', bg: 'radial-gradient(ellipse at center, rgba(255,77,46,0.05), transparent 60%)' },
-  }[tone];
-  return (
-    <Link
-      to={to}
-      transitionLabel={transitionLabel}
-      transitionSub={transitionSub}
-      panelColor={panelColor}
-      panelText={panelText}
-      style={{
-        position: 'relative', overflow: 'hidden',
-        background: 'var(--bg)',
-        padding: 'clamp(32px, 4vw, 48px)',
-        minHeight: 360,
-        display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-        transition: 'background var(--d-fast)',
-      }}
-      onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-2)'}
-      onMouseLeave={(e) => e.currentTarget.style.background = 'var(--bg)'}
-    >
-      <div aria-hidden="true" style={{ position: 'absolute', inset: 0, background: palette.bg, pointerEvents: 'none' }} />
-      <div style={{ position: 'relative' }}>
-        <div style={{ height: 1, width: 36, background: palette.rule, marginBottom: 18 }} />
-        <div className="eyebrow" style={{ marginBottom: 22, color: palette.rule }}>{eyebrow}</div>
-        <h3 className="h-2" style={{ marginBottom: 16, maxWidth: '14ch' }}>{title}</h3>
-        <p className="text-body muted" style={{ maxWidth: '36ch' }}>{body}</p>
-      </div>
-      <div style={{ position: 'relative', marginTop: 32, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-        {accent}
-        <span className="row" style={{ font: '600 14px/1 var(--font-sans)' }}>Keşfet <IconArrow size={14} /></span>
-      </div>
-    </Link>
-  );
-}
-
-function MaisonAccent() {
-  return (
-    <svg width="92" height="92" viewBox="0 0 92 92">
-      <defs>
-        <radialGradient id="m-g" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#d4af37" stopOpacity="0.6" />
-          <stop offset="100%" stopColor="#d4af37" stopOpacity="0" />
-        </radialGradient>
-      </defs>
-      <circle cx="46" cy="46" r="40" fill="url(#m-g)" />
-      <circle cx="46" cy="46" r="36" fill="none" stroke="#d4af37" strokeWidth="0.8" />
-      <text x="46" y="51" textAnchor="middle" fontFamily="Playfair Display, serif" fontWeight="700" fontSize="14" fill="#d4af37" fontStyle="italic">Maison</text>
-      <text x="46" y="66" textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="7" letterSpacing="2" fill="#d4af37" opacity="0.7">N°001/12</text>
-    </svg>
-  );
-}
-function LabAccent() {
-  return (
-    <svg width="92" height="92" viewBox="0 0 92 92">
-      <rect x="6" y="6" width="80" height="80" fill="none" stroke="#00f0ff" strokeWidth="0.8" strokeDasharray="2 4" />
-      <path d="M20 20 H32 M20 20 V32 M72 20 H60 M72 20 V32 M20 72 H32 M20 72 V60 M72 72 H60 M72 72 V60" stroke="#00f0ff" strokeWidth="1.2" />
-      <text x="46" y="50" textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontWeight="700" fontSize="9" letterSpacing="2" fill="#00f0ff">// KB.LAB</text>
-      <text x="46" y="62" textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="6" letterSpacing="1.5" fill="#b1ff5b">RENDER_OK</text>
-    </svg>
-  );
-}
-function AtolyeAccent() {
-  return (
-    <svg width="92" height="92" viewBox="0 0 92 92">
-      <circle cx="46" cy="46" r="36" fill="none" stroke="#8b8b94" strokeWidth="0.6" />
-      {[0,1,2,3,4,5,6,7,8,9,10,11].map((i) => {
-        const a = (i / 12) * Math.PI * 2;
-        return <line key={i} x1={46 + Math.cos(a)*32} y1={46 + Math.sin(a)*32} x2={46 + Math.cos(a)*36} y2={46 + Math.sin(a)*36} stroke="#8b8b94" strokeWidth="0.8" />;
-      })}
-      <line x1="46" y1="46" x2="46" y2="26" stroke="#ff4d2e" strokeWidth="1.5" />
-      <line x1="46" y1="46" x2="62" y2="46" stroke="#f6f6f8" strokeWidth="1" />
-      <circle cx="46" cy="46" r="2" fill="#ff4d2e" />
-    </svg>
-  );
-}
-
-Object.assign(window, { HubSporPage });
+Object.assign(window, { PDPPage });

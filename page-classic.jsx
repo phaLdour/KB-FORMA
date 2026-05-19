@@ -1,338 +1,452 @@
 /* =============================================================================
- * page-classic.jsx — Maison KB · Heritage cabinet (Editorial mood)
- * Mood: editorial (gold + cream, Vogue-style)
- * Identity: museum cabinet, numbered pieces, certificate cards
+ * page-builder.jsx — KB.LAB · interactive 3D-feel jersey configurator
+ * Mood: lab (cyan HUD)
+ * Real interactive: template, fabric, colors, name, number, crest, all update the preview.
  * ============================================================================= */
 
-const { useState: useSC } = React;
+const { useState: useSL, useMemo: useMSL, useEffect: useESL, useRef: useRSL } = React;
 
-const CLASSIC_PIECES = [
-  {
-    to: '/futbol/klasik/mar86', no: '01', title: 'Maradona', year: '1986',
-    nation: 'Arjantin · México Mundial', subtitle: 'Yarı final · 22 Haziran 1986',
-    bullets: ['Tek bir kez · 12 nüsha', 'Akrilik panel kutu', 'Numaralı sertifika'],
-    quote: `"Tanrı'nın eli." Aynı saatte, ikinci gol — futbol tarihinin en güzel solo koşusu.`,
-    primary: '#75AADB', secondary: '#F6B40E', num: '10', accent: '#0a0a0b', pattern: 'stripes-v',
-    price: '14.999,00 ₺',
-  },
-  {
-    to: '/futbol/klasik/zid98', no: '02', title: 'Zidane', year: '1998',
-    nation: 'Fransa · Coupe du Monde', subtitle: 'Final · 12 Temmuz 1998 · Stade de France',
-    bullets: ['Tek bir kez · 12 nüsha', 'Linen astar', 'Hand-stitched isim'],
-    quote: `İki kafa. 27. dakika. 45+1'inci dakika. Sonra — taç.`,
-    primary: '#0055A4', secondary: '#EF4135', num: '10', accent: '#fff', pattern: 'plain',
-    price: '14.999,00 ₺',
-  },
-  {
-    to: '/futbol/klasik/ron02', no: '03', title: 'Ronaldo', year: '2002',
-    nation: 'Brezilya · 日韓 World Cup', subtitle: 'Final · 30 Haziran 2002 · Yokohama',
-    bullets: ['Tek bir kez · 12 nüsha', 'Sarı-yeşil paspol', 'Brezilya el dokuması bordür'],
-    quote: 'O ünlü saç kesiminden sonra iki gol. 32. ve 79. dakika.',
-    primary: '#FEDF00', secondary: '#009C3B', num: '9', accent: '#002776', pattern: 'plain',
-    price: '14.999,00 ₺',
-  },
-  {
-    to: '/futbol/klasik/cr07', no: '04', title: 'Cristiano', year: '2007',
-    nation: 'Manchester United · Premier League', subtitle: 'Şampiyonluk sezonu',
-    bullets: ['Tek bir kez · 12 nüsha', 'Şeftali tonu kumaş', 'Pre-spray patch'],
-    quote: 'Pep önce keşfetti, sonra dünya. 17 lig golü.',
-    primary: '#DA291C', secondary: '#FBE122', num: '7', accent: '#fff', pattern: 'plain',
-    price: '14.999,00 ₺',
-  },
-  {
-    to: '/futbol/klasik/mes09', no: '05', title: 'Messi', year: '2009',
-    nation: 'FC Barcelona · UEFA Champions', subtitle: 'Final · 27 Mayıs 2009 · Roma',
-    bullets: ['Tek bir kez · 12 nüsha', 'Bordo-mavi şerit', 'Roma final iz çıkışı'],
-    quote: `Beş Ballon d'Or'un başlangıcı. Altıpas, kafa, ağ.`,
-    primary: '#A50044', secondary: '#004D98', num: '10', accent: '#FCD116', pattern: 'stripes-v',
-    price: '14.999,00 ₺',
-  },
-  {
-    to: '/futbol/klasik/tot06', no: '06', title: 'Totti', year: '2006',
-    nation: 'AS Roma · Lupa kalbi', subtitle: 'Roma Derbisi serisi',
-    bullets: ['Tek bir kez · 12 nüsha', 'Olympico Roma kırmızısı', 'Lupa hand-stitched'],
-    quote: 'Bir şehir, bir takım, bir 10 numara.',
-    primary: '#8A2129', secondary: '#FBE122', num: '10', accent: '#FBE122', pattern: 'plain',
-    price: '14.999,00 ₺',
-  },
+const TEMPLATES = [
+  { id: 'classic',  label: 'Klasik',   desc: 'Geleneksel V-yaka, düz kesim',           pattern: 'plain' },
+  { id: 'modern',   label: 'Modern',   desc: 'Yarım yaka, ergonomik kesim',            pattern: 'stripes-v' },
+  { id: 'stripes',  label: 'Şeritli',   desc: 'Dikey şeritler, klasik Avrupa',          pattern: 'stripes-v' },
+  { id: 'split',    label: 'İki Renk',  desc: 'Yarım/yarım renk bloklaması',            pattern: 'half' },
+];
+const FABRICS = [
+  { id: 'pro',      label: 'Match Pro',     desc: 'İtalyan jakar · 280 g/m²',  price: 2999 },
+  { id: 'training', label: 'Training Air', desc: 'Mesh polyester · 180 g/m²',  price: 2299 },
+  { id: 'heritage', label: 'Heritage',      desc: 'Pamuk-poly · 320 g/m²',     price: 3499 },
+];
+const PRESET_PALETTES = [
+  { primary: '#ff4d2e', secondary: '#0a0a0b', label: 'Atölye' },
+  { primary: '#A90432', secondary: '#FFB81C', label: 'Sarı-Kırmızı' },
+  { primary: '#0F3F8C', secondary: '#FCD116', label: 'Lacivert-Sarı' },
+  { primary: '#000000', secondary: '#FFFFFF', label: 'Siyah-Beyaz' },
+  { primary: '#007A33', secondary: '#FFFFFF', label: 'Yeşil-Beyaz' },
+  { primary: '#0055A4', secondary: '#EF4135', label: 'Tricolore' },
+  { primary: '#552583', secondary: '#FDB927', label: 'Mor-Altın' },
+  { primary: '#00f0ff', secondary: '#06080c', label: 'Lab' },
 ];
 
-function ClassicPage() {
+function BuilderPage() {
+  const [tpl, setTpl] = useSL('classic');
+  const [fab, setFab] = useSL('pro');
+  const [primary, setPrimary] = useSL('#ff4d2e');
+  const [secondary, setSecondary] = useSL('#0a0a0b');
+  const [name, setName] = useSL('SİZ');
+  const [num, setNum] = useSL('10');
+  const [crest, setCrest] = useSL('KB');
+  const [view, setView] = useSL('front'); // front | back
+  const [rot, setRot] = useSL(0);
+  const cart = useCart();
+
+  // Auto-rotate when user is on the page idle
+  useESL(() => {
+    let raf, last = performance.now();
+    const tick = (t) => {
+      const dt = (t - last) / 1000; last = t;
+      setRot((r) => (r + dt * 8) % 360);
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
+  const tplObj = TEMPLATES.find((t) => t.id === tpl);
+  const fabObj = FABRICS.find((f) => f.id === fab);
+  const total = fabObj.price.toLocaleString('tr-TR') + ',00 ₺';
+
+  const shareId = useMSL(() => Math.random().toString(36).slice(2, 8).toUpperCase(), []);
+
   return (
-    <div>
-      {/* =================================================================
-            HERO — editorial. Big italic display, gold rule, "cabinet" plaque.
-         ================================================================= */}
-      <section style={{ position: 'relative', overflow: 'hidden', minHeight: '88vh', display: 'flex', alignItems: 'center' }}>
-        <div aria-hidden="true" style={{ position: 'absolute', inset: 0, background: 'var(--bg-2)' }} />
-        <div aria-hidden="true" className="bg-luxe-vignette" style={{ position: 'absolute', inset: 0 }} />
+    <div style={{ position: 'relative', minHeight: '100vh' }}>
+      {/* Lab grid background everywhere */}
+      <div aria-hidden="true" className="bg-lab-grid" style={{ position: 'fixed', inset: 0, opacity: 0.8, pointerEvents: 'none', zIndex: 0 }} />
+      <div aria-hidden="true" style={{ position: 'fixed', inset: 0, background: 'radial-gradient(ellipse at 70% 30%, rgba(0,240,255,0.10), transparent 60%), radial-gradient(ellipse at 30% 80%, rgba(177,255,91,0.05), transparent 60%)', pointerEvents: 'none', zIndex: 0 }} />
 
-        {/* Decorative left margin number */}
-        <div aria-hidden="true" style={{ position: 'absolute', left: 'calc(-1 * var(--gut))', bottom: '8vh', pointerEvents: 'none' }}>
-          <span className="big-num" style={{ fontStyle: 'italic', WebkitTextStroke: '1px var(--gold-deep)' }}>VI</span>
-        </div>
-
-        <div className="container" style={{ position: 'relative', width: '100%', paddingBlock: 'clamp(96px, 12vw, 160px)' }}>
-          <Reveal>
-            <div className="eyebrow" style={{ color: 'var(--accent)' }}>MAISON KB · CABINET № VI · İSTANBUL</div>
-          </Reveal>
-
-          <Reveal delay={120}>
-            <h1 className="h-display" style={{ maxWidth: '12ch', marginTop: 28 }}>
-              <span className="italic-display">Bir kez</span><br />
-              dokunmuş.
-            </h1>
-          </Reveal>
-
-          <Reveal delay={240}>
-            <p className="text-lead" style={{ maxWidth: '50ch', marginTop: 40, fontFamily: 'var(--font-serif)', fontSize: 'clamp(19px, 1.6vw, 24px)', fontStyle: 'italic', lineHeight: 1.5, color: 'var(--text)', opacity: 0.85 }}>
-              Maison KB, futbolun mührünü taşıyan altı efsane formayı — Maradona &lsquo;86&rsquo;dan Totti &lsquo;06&rsquo;ya — el işçiliğiyle yeniden dokur. Her parça tek bir kez üretilir. Her parça numaralandırılır. Her parça, sahibinin adıyla kayıtlıdır.
-            </p>
-          </Reveal>
-
-          <Reveal delay={360}>
-            <div className="row" style={{ gap: 36, marginTop: 56, flexWrap: 'wrap' }}>
-              <a href="#cabinet" className="btn btn-primary btn-lg" style={{ background: 'var(--accent)', color: 'var(--bg)' }} onClick={(e) => { e.preventDefault(); document.getElementById('cabinet')?.scrollIntoView({ behavior: 'smooth' }); }}>
-                Vitrini görün <IconArrow size={16} />
-              </a>
-              <div>
-                <div className="text-micro" style={{ color: 'var(--muted)', marginBottom: 8 }}>BU PARÇA</div>
-                <div style={{ font: '700 16px/1 var(--font-display)', letterSpacing: '-0.01em', fontStyle: 'italic' }}>14.999,00 ₺</div>
-                <div className="text-caption muted" style={{ marginTop: 4 }}>Akrilik kutu · Sertifika · Beden 04 → 56</div>
+      {/* HEADER STRIP — system status */}
+      <section style={{ position: 'relative', zIndex: 1 }}>
+        <div className="container" style={{ paddingBlock: 'clamp(28px, 4vw, 48px)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 24, flexWrap: 'wrap' }}>
+            <div>
+              <div className="eyebrow" style={{ color: 'var(--accent)', marginBottom: 14 }}>
+                <span style={{ display: 'inline-block', width: 8, height: 8, background: 'var(--accent-2)', borderRadius: 50, marginRight: 10, boxShadow: '0 0 12px var(--accent-2)', verticalAlign: 'middle' }} />
+                // KB.LAB · SYSTEM ONLINE · BUILD {shareId}
               </div>
+              <h1 className="h-1" style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, letterSpacing: '-0.02em' }}>
+                <span style={{ color: 'var(--accent)' }}>{'>'} </span>
+                Tek parça spesifikasyon.
+              </h1>
+              <p className="text-body" style={{ color: 'var(--muted)', maxWidth: '52ch', marginTop: 16, fontFamily: 'var(--font-mono)' }}>
+                Şablon, kumaş, renk, isim, numara. Sağdaki HUD'da gerçek zamanlı görün. URL'yi paylaşın — biz üretelim.
+              </p>
             </div>
-          </Reveal>
-        </div>
 
-        {/* Bottom-right plaque — Maison emblem */}
-        <div aria-hidden="true" style={{ position: 'absolute', bottom: 'var(--gut)', right: 'var(--gut)', textAlign: 'right' }} className="hide-on-tablet">
-          <div className="text-micro" style={{ color: 'var(--gold-deep)', marginBottom: 6 }}>MAISON KB · EST. 2026</div>
-          <svg width="120" height="120" viewBox="0 0 120 120" style={{ display: 'inline-block' }}>
-            <circle cx="60" cy="60" r="56" fill="none" stroke="var(--accent)" strokeWidth="0.8" />
-            <circle cx="60" cy="60" r="48" fill="none" stroke="var(--accent)" strokeWidth="0.6" strokeDasharray="2 4" />
-            <text x="60" y="56" textAnchor="middle" fontFamily="Playfair Display" fontWeight="800" fontSize="28" letterSpacing="-1" fill="var(--accent)">KB</text>
-            <text x="60" y="74" textAnchor="middle" fontFamily="Playfair Display" fontStyle="italic" fontSize="11" fill="var(--accent)">Maison</text>
-            <text x="60" y="88" textAnchor="middle" fontFamily="JetBrains Mono" fontSize="6" letterSpacing="2" fill="var(--accent)" opacity="0.7">CRAFTED · ONCE</text>
-          </svg>
-        </div>
-      </section>
-
-      {/* =================================================================
-            CABINET — pieces in editorial detail
-         ================================================================= */}
-      <section id="cabinet" className="container" style={{ paddingBlock: 'clamp(80px, 10vw, 120px)' }}>
-        <Reveal>
-          <div className="eyebrow" style={{ marginBottom: 14, color: 'var(--accent)' }}>VITRIN · 6 PARÇA · 72 NÜSHA</div>
-          <h2 className="h-1" style={{ maxWidth: '18ch', marginBottom: 24, fontStyle: 'italic' }}>
-            Tarihten <span style={{ color: 'var(--accent)', fontStyle: 'normal' }}>seçilmiş</span> altı an.
-          </h2>
-          <p className="text-lead" style={{ maxWidth: '54ch', fontFamily: 'var(--font-serif)', fontStyle: 'italic', color: 'var(--text)', opacity: 0.78 }}>
-            Her forma, kaybedilen değil — kazanılan bir andan dokunur. Her detay restore edilir, her sayı yeniden işlenir, her etiket atölyede dikilir.
-          </p>
-        </Reveal>
-
-        <div style={{ marginTop: 80, display: 'grid', gap: 1, background: 'var(--line)' }}>
-          {CLASSIC_PIECES.map((p, i) => (
-            <PieceRow key={p.no} piece={p} flip={i % 2 === 1} />
-          ))}
-        </div>
-      </section>
-
-      {/* =================================================================
-            PROVENANCE — certificate sample + craft notes
-         ================================================================= */}
-      <section className="container" style={{ paddingBlock: 'clamp(60px, 8vw, 100px)' }}>
-        <Reveal>
-          <div className="eyebrow" style={{ marginBottom: 14, color: 'var(--accent)' }}>SERTİFİKA · PROVENANCE</div>
-          <h2 className="h-2" style={{ maxWidth: '20ch', marginBottom: 48 }}>
-            Her parça <span className="italic-display" style={{ color: 'var(--accent)' }}>imzalı</span> gelir.
-          </h2>
-        </Reveal>
-
-        <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 1fr', gap: 48, alignItems: 'center' }} className="provenance-grid">
-          <CertificatePreview />
-          <div>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 24 }}>
-              {[
-                { lbl: 'NÜSHA', val: '12 — Aşılmaz', body: 'Her form tarihten yalnızca on iki nüsha üretilir, sonra kalıp imha edilir.' },
-                { lbl: 'KUTU', val: 'Akrilik panel', body: 'Restorasyona uygun, asitsiz iç astar, kapaklı plaka.' },
-                { lbl: 'KUMAŞ', val: 'İtalyan jakar', body: 'Como bölgesinden, 280 g/m². Dönemine sadık doku.' },
-                { lbl: 'SİPARİŞ', val: '7–14 gün', body: 'Talep alındıktan sonra üretim. Made-to-order — stok değil, mühür.' },
-              ].map((item) => (
-                <li key={item.lbl} style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: 24, paddingBottom: 22, borderBottom: '1px solid var(--line)' }}>
-                  <div>
-                    <div className="text-micro" style={{ color: 'var(--accent)', marginBottom: 6 }}>{item.lbl}</div>
-                    <div style={{ font: '700 16px/1.2 var(--font-display)', fontStyle: 'italic' }}>{item.val}</div>
-                  </div>
-                  <p className="text-small" style={{ color: 'var(--text)', opacity: 0.78, fontFamily: 'var(--font-serif)', fontSize: 15, fontStyle: 'italic' }}>{item.body}</p>
-                </li>
-              ))}
-            </ul>
+            {/* HUD scoreboard */}
+            <div style={{ display: 'inline-flex', border: '1px solid var(--line-2)', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)' }}>
+              <HudCell lbl="LATENCY" val="12ms" />
+              <HudCell lbl="POLY" val="48k" />
+              <HudCell lbl="FABRIC" val={fabObj.id.toUpperCase()} />
+              <HudCell lbl="BUILD" val={shareId} />
+              <HudCell lbl="STATUS" val="READY" hi />
+            </div>
           </div>
         </div>
       </section>
 
-      {/* =================================================================
-            CLOSER — editorial pull-quote
-         ================================================================= */}
-      <section className="full-bleed" style={{ borderTop: '1px solid var(--line)', borderBottom: '1px solid var(--line)', padding: 'clamp(80px, 12vw, 140px) var(--gut)', background: 'var(--bg-2)', position: 'relative' }}>
-        <div aria-hidden="true" className="bg-luxe-vignette" style={{ position: 'absolute', inset: 0 }} />
-        <div className="container" style={{ position: 'relative', textAlign: 'center', padding: 0 }}>
-          <div className="eyebrow" style={{ marginBottom: 28, color: 'var(--accent)', justifyContent: 'center' }}>MAISON KB · ATÖLYE NOTU</div>
-          <p style={{ font: '400 clamp(28px, 4vw, 56px)/1.15 var(--font-display)', fontStyle: 'italic', maxWidth: '24ch', margin: '0 auto', color: 'var(--text)' }}>
-            "Bir formayı yeniden dokurken, bir anı dokuyoruz. Sayı, yıl, dakika — herşey aynı."
-          </p>
-          <div className="text-micro muted" style={{ marginTop: 32, color: 'var(--accent)' }}>— KB ATÖLYE · LEVENT</div>
+      {/* MAIN GRID — controls left, preview right */}
+      <section style={{ position: 'relative', zIndex: 1 }}>
+        <div className="container" style={{ paddingBlock: 'clamp(20px, 3vw, 40px)' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '380px 1fr', gap: 32 }} className="builder-grid">
+
+            {/* CONTROLS */}
+            <div style={{ display: 'grid', gap: 1, background: 'var(--line)', alignSelf: 'start' }}>
+              <Panel title="01 · ŞABLON" hint={tplObj.desc}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                  {TEMPLATES.map((t) => (
+                    <button key={t.id} className={`tpl-btn ${tpl === t.id ? 'is-active' : ''}`} onClick={() => setTpl(t.id)}>
+                      <TemplateGlyph id={t.id} />
+                      <span>{t.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </Panel>
+
+              <Panel title="02 · KUMAŞ" hint={`${fabObj.desc} · ${fabObj.price.toLocaleString('tr-TR')},00 ₺`}>
+                <div style={{ display: 'grid', gap: 6 }}>
+                  {FABRICS.map((f) => (
+                    <button key={f.id} className={`row-btn ${fab === f.id ? 'is-active' : ''}`} onClick={() => setFab(f.id)}>
+                      <span style={{ flex: 1, textAlign: 'left' }}>
+                        <span style={{ display: 'block', font: '600 13px/1 var(--font-mono)', letterSpacing: '0.06em' }}>{f.label}</span>
+                        <span className="text-caption muted" style={{ fontFamily: 'var(--font-mono)' }}>{f.desc}</span>
+                      </span>
+                      <span style={{ font: '700 12px/1 var(--font-mono)', color: fab === f.id ? 'var(--accent)' : 'var(--muted)' }}>{f.price.toLocaleString('tr-TR')} ₺</span>
+                    </button>
+                  ))}
+                </div>
+              </Panel>
+
+              <Panel title="03 · RENK" hint="Birincil + ikincil renk">
+                <div style={{ display: 'flex', gap: 16, marginBottom: 16 }}>
+                  <ColorField label="BİRİNCİL" value={primary} onChange={setPrimary} />
+                  <ColorField label="İKİNCİL" value={secondary} onChange={setSecondary} />
+                </div>
+                <div className="text-micro muted" style={{ marginBottom: 8 }}>HAZIR PALETLER</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6 }}>
+                  {PRESET_PALETTES.map((p) => (
+                    <button
+                      key={p.label}
+                      onClick={() => { setPrimary(p.primary); setSecondary(p.secondary); }}
+                      title={p.label}
+                      style={{
+                        display: 'grid', gridTemplateColumns: '1fr 1fr',
+                        height: 32, padding: 0, overflow: 'hidden',
+                        border: primary === p.primary && secondary === p.secondary ? '1px solid var(--accent)' : '1px solid var(--line)',
+                        borderRadius: 4,
+                      }}
+                    >
+                      <span style={{ background: p.primary }} />
+                      <span style={{ background: p.secondary }} />
+                    </button>
+                  ))}
+                </div>
+              </Panel>
+
+              <Panel title="04 · İSİM · NUMARA" hint="Sırt yazısı ve numara">
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 90px', gap: 8 }}>
+                  <LabInput label="İSİM" value={name} onChange={(v) => setName(v.toUpperCase())} maxLength={12} />
+                  <LabInput label="NO" value={num} onChange={(v) => setNum(v.replace(/\D/g, '').slice(0, 2))} maxLength={2} />
+                </div>
+              </Panel>
+
+              <Panel title="05 · AMBLEM" hint="3 karakter, göğüs ortasında">
+                <LabInput label="CREST" value={crest} onChange={(v) => setCrest(v.toUpperCase().slice(0, 3))} maxLength={3} />
+              </Panel>
+
+              <Panel title="06 · ÖZET" hint={null}>
+                <div style={{ display: 'grid', gap: 6, marginBottom: 16, fontFamily: 'var(--font-mono)', fontSize: 12 }}>
+                  <SummaryRow lbl="TEMPLATE" val={tplObj.label} />
+                  <SummaryRow lbl="FABRIC" val={fabObj.label} />
+                  <SummaryRow lbl="PRIMARY" val={primary} swatch={primary} />
+                  <SummaryRow lbl="SECONDARY" val={secondary} swatch={secondary} />
+                  <SummaryRow lbl="NAME · #" val={`${name || '—'} · ${num || '—'}`} />
+                  <SummaryRow lbl="CREST" val={crest || '—'} />
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 16, paddingTop: 14, borderTop: '1px dashed var(--line-2)' }}>
+                  <span className="text-micro" style={{ color: 'var(--muted)' }}>TOPLAM</span>
+                  <span style={{ font: '700 24px/1 var(--font-mono)', color: 'var(--accent)', letterSpacing: '-0.01em' }}>{total}</span>
+                </div>
+                <button
+                  className="btn btn-primary"
+                  style={{ width: '100%', background: 'var(--accent)', color: 'var(--bg)', fontFamily: 'var(--font-mono)', letterSpacing: '0.04em' }}
+                  onClick={() => cart.add()}
+                >
+                  // SEPETE EKLE <IconArrow size={14} />
+                </button>
+                <button className="btn btn-ghost" style={{ width: '100%', marginTop: 8, fontFamily: 'var(--font-mono)', letterSpacing: '0.04em' }} onClick={() => navigator.clipboard?.writeText(`https://kbspor.com.tr/lab/${shareId}`).then(() => alert('URL kopyalandı: https://kbspor.com.tr/lab/' + shareId))}>
+                  // PAYLAŞ · /{shareId}
+                </button>
+              </Panel>
+            </div>
+
+            {/* PREVIEW */}
+            <div style={{ position: 'relative', minHeight: 720 }}>
+              <div style={{ position: 'sticky', top: 100, border: '1px solid var(--line)', background: 'rgba(0, 240, 255, 0.02)', overflow: 'hidden' }}>
+                {/* HUD chrome */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 18px', borderBottom: '1px solid var(--line)', background: 'rgba(0,0,0,0.4)' }}>
+                  <span className="text-micro" style={{ color: 'var(--accent)' }}>// PREVIEW · {view === 'front' ? 'ÖN' : 'ARKA'} · ROT {Math.round(rot)}°</span>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <button className={`pill ${view === 'front' ? 'is-active' : ''}`} onClick={() => setView('front')} style={{ height: 26 }}>ÖN</button>
+                    <button className={`pill ${view === 'back' ? 'is-active' : ''}`} onClick={() => setView('back')} style={{ height: 26 }}>ARKA</button>
+                  </div>
+                </div>
+
+                {/* The 3D-feel jersey */}
+                <div style={{ position: 'relative', minHeight: 600, display: 'grid', placeItems: 'center', padding: 'clamp(24px, 4vw, 56px)' }}>
+                  {/* Floor reflection */}
+                  <div aria-hidden="true" style={{ position: 'absolute', inset: 'auto 0 0 0', height: '40%', background: 'radial-gradient(ellipse at center top, rgba(0,240,255,0.10), transparent 70%)' }} />
+
+                  {/* The jersey, rotating gently in 3D feel via perspective */}
+                  <div style={{ perspective: 1200 }}>
+                    <div style={{ transform: `rotateY(${Math.sin(rot * Math.PI / 180) * 14}deg) rotateX(2deg)`, transformStyle: 'preserve-3d', transition: 'transform 60ms linear' }}>
+                      <LabJersey
+                        template={tpl}
+                        primary={primary}
+                        secondary={secondary}
+                        name={name}
+                        num={num}
+                        crest={crest}
+                        view={view}
+                        rot={rot}
+                      />
+                    </div>
+                  </div>
+
+                  {/* HUD overlay marks */}
+                  <svg aria-hidden="true" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
+                    <g stroke="var(--accent)" strokeWidth="0.6" fill="none" opacity="0.5">
+                      <path d="M16 16 L48 16 M16 16 L16 48" />
+                      <path d="M-16 16 L-48 16 M-16 16 L-16 48" transform="translate(100% 0)" />
+                      <path d="M16 -16 L48 -16 M16 -16 L16 -48" transform="translate(0 100%)" />
+                      <path d="M-16 -16 L-48 -16 M-16 -16 L-16 -48" transform="translate(100% 100%)" />
+                    </g>
+                  </svg>
+
+                  {/* Bottom HUD readouts */}
+                  <div style={{ position: 'absolute', left: 18, bottom: 14, fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.18em', color: 'var(--accent)', opacity: 0.7 }}>
+                    PRIMARY {primary.toUpperCase()} · SECONDARY {secondary.toUpperCase()}
+                  </div>
+                  <div style={{ position: 'absolute', right: 18, bottom: 14, fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.18em', color: 'var(--accent-2)', opacity: 0.7 }}>
+                    RENDER · OK
+                  </div>
+                </div>
+
+                {/* Specs strip */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', borderTop: '1px solid var(--line)' }}>
+                  <PreviewSpec lbl="BEDEN" val="L → 4-XL" />
+                  <PreviewSpec lbl="ÜRETİM" val="7–14 GÜN" />
+                  <PreviewSpec lbl="KARGO" val="1–3 GÜN" />
+                  <PreviewSpec lbl="İADE" val="14 GÜN" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Bottom command bar — explanatory steps */}
+      <section style={{ position: 'relative', zIndex: 1, marginTop: 80, borderTop: '1px solid var(--line)' }}>
+        <div className="container" style={{ paddingBlock: 'clamp(60px, 8vw, 100px)' }}>
+          <div className="eyebrow" style={{ marginBottom: 14, color: 'var(--accent)' }}>// SÜREÇ · END-TO-END</div>
+          <h2 className="h-2" style={{ maxWidth: '20ch', marginBottom: 48, fontFamily: 'var(--font-display)' }}>
+            Tasarımdan kapınıza, <span style={{ color: 'var(--accent)' }}>tek pipeline</span>.
+          </h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1, background: 'var(--line)' }} className="steps-grid">
+            {[
+              { no: '01', title: 'Tasarla', body: 'KB.LAB\'da 3D olarak. URL\'yi paylaşıp arkadaşına gönder.' },
+              { no: '02', title: 'Sipariş', body: 'iyzico ile güvenli ödeme. TRY · USD · EUR.' },
+              { no: '03', title: 'Üretim', body: 'Levent atölyesinde 7–14 gün. WhatsApp ile durum bildirimi.' },
+              { no: '04', title: 'Kargo', body: '1–3 gün içinde kapıda. KDV %20 fiyata dahil.' },
+            ].map((s) => (
+              <div key={s.no} style={{ padding: 'clamp(28px, 3vw, 40px)', background: 'var(--bg)' }}>
+                <div style={{ font: '700 14px/1 var(--font-mono)', color: 'var(--accent)', letterSpacing: '0.16em', marginBottom: 18 }}>// {s.no}</div>
+                <h3 className="h-3" style={{ marginBottom: 10, fontFamily: 'var(--font-mono)' }}>{s.title}</h3>
+                <p className="text-small muted" style={{ fontFamily: 'var(--font-mono)' }}>{s.body}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
       <style>{`
-        @media (max-width: 900px) {
-          .piece-row { grid-template-columns: 1fr !important; }
-          .piece-row .piece-img { order: -1; }
-          .provenance-grid { grid-template-columns: 1fr !important; }
-          .hide-on-tablet { display: none !important; }
+        @media (max-width: 1100px) {
+          .builder-grid { grid-template-columns: 1fr !important; }
         }
+        @media (max-width: 720px) {
+          .steps-grid { grid-template-columns: 1fr 1fr !important; }
+        }
+        .tpl-btn {
+          display: flex; flex-direction: column; align-items: center; gap: 6px;
+          padding: 12px 8px; border: 1px solid var(--line);
+          font: 600 11px/1 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase;
+          color: var(--muted); background: transparent;
+          transition: all var(--d-fast);
+        }
+        .tpl-btn:hover { color: var(--text); border-color: var(--line-2); }
+        .tpl-btn.is-active { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
+        .row-btn {
+          display: flex; align-items: center; gap: 10px;
+          padding: 10px 12px;
+          border: 1px solid var(--line);
+          background: transparent;
+          transition: all var(--d-fast);
+          color: var(--muted);
+        }
+        .row-btn:hover { border-color: var(--line-2); color: var(--text); }
+        .row-btn.is-active { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
       `}</style>
     </div>
   );
 }
 
-/* ─────────────────────────── Piece row (editorial) ───────────────────── */
-function PieceRow({ piece, flip }) {
+/* ─────────────────────────── HUD bits ──────────────────────────────── */
+function HudCell({ lbl, val, hi }) {
   return (
-    <article
-      className="piece-row"
-      style={{
-        display: 'grid',
-        gridTemplateColumns: flip ? '1fr 1.2fr' : '1.2fr 1fr',
-        gap: 1,
-        background: 'var(--bg)',
-        padding: 0,
-        alignItems: 'stretch',
-      }}
-    >
-      {/* COPY */}
-      <div style={{ padding: 'clamp(40px, 6vw, 80px)', display: 'flex', flexDirection: 'column', justifyContent: 'center', order: flip ? 2 : 1 }}>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 16, marginBottom: 28 }}>
-          <span style={{ font: 'italic 800 clamp(56px, 8vw, 120px)/0.9 var(--font-display)', color: 'var(--accent)', letterSpacing: '-0.06em' }}>{piece.no}</span>
-          <span className="text-micro muted">/ 06 PIECE</span>
-        </div>
-        <h3 className="h-1" style={{ marginBottom: 4, fontStyle: 'italic' }}>{piece.title}</h3>
-        <div style={{ font: '600 clamp(22px, 2.4vw, 32px)/1 var(--font-display)', color: 'var(--accent)', marginBottom: 16 }}>'{piece.year.slice(2)}</div>
-        <div className="text-small muted" style={{ marginBottom: 4 }}>{piece.nation}</div>
-        <div className="text-small" style={{ color: 'var(--text)', opacity: 0.78, marginBottom: 28 }}>{piece.subtitle}</div>
-
-        <blockquote style={{ borderLeft: '1px solid var(--accent)', paddingLeft: 18, margin: '0 0 28px', font: 'italic 400 clamp(16px, 1.4vw, 19px)/1.6 var(--font-serif)', color: 'var(--text)', opacity: 0.86, maxWidth: '40ch' }}>
-          {piece.quote}
-        </blockquote>
-
-        <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 32px', display: 'grid', gap: 8 }}>
-          {piece.bullets.map((b) => (
-            <li key={b} className="text-small" style={{ display: 'flex', alignItems: 'center', gap: 12, color: 'var(--text)', opacity: 0.82 }}>
-              <span style={{ display: 'inline-block', width: 16, height: 1, background: 'var(--accent)' }} />
-              {b}
-            </li>
-          ))}
-        </ul>
-
-        <div className="row" style={{ gap: 24, flexWrap: 'wrap' }}>
-          <Link to={piece.to} className="btn btn-ghost" style={{ borderColor: 'var(--accent)', color: 'var(--accent)' }}>
-            Sertifika başvurusu <IconArrow size={14} />
-          </Link>
-          <div>
-            <div className="text-micro" style={{ color: 'var(--muted)' }}>FİYAT</div>
-            <div style={{ font: '600 16px/1.2 var(--font-display)', fontStyle: 'italic' }}>{piece.price}</div>
-          </div>
-        </div>
+    <div style={{ padding: '10px 14px', borderRight: '1px solid var(--line)', minWidth: 92 }}>
+      <div style={{ font: '600 9px/1 var(--font-mono)', color: 'var(--muted)', letterSpacing: '0.18em', marginBottom: 4 }}>{lbl}</div>
+      <div style={{ font: '700 12px/1 var(--font-mono)', color: hi ? 'var(--accent-2)' : 'var(--text)', letterSpacing: '0.06em' }}>
+        {hi && '●  '}{val}
       </div>
-
-      {/* "PHOTOGRAPH" — chip jersey rendered editorial */}
-      <div className="piece-img" style={{
-        position: 'relative',
-        padding: 'clamp(40px, 5vw, 80px)',
-        background: `linear-gradient(${flip ? '225deg' : '135deg'}, rgba(212,175,55,0.08), transparent 60%)`,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        order: flip ? 1 : 2,
-        borderLeft: flip ? '0' : '1px solid var(--line)',
-        borderRight: flip ? '1px solid var(--line)' : '0',
-      }}>
-        <div style={{ position: 'relative', width: '78%', maxWidth: 420 }}>
-          {/* corner numerals */}
-          <span style={{ position: 'absolute', top: -28, left: -8, font: '600 11px/1 var(--font-mono)', letterSpacing: '0.18em', color: 'var(--accent)' }}>N° {piece.no} / 06</span>
-          <span style={{ position: 'absolute', bottom: -28, right: -8, font: '600 11px/1 var(--font-mono)', letterSpacing: '0.18em', color: 'var(--accent)' }}>0X / 12 NÜSHA</span>
-          <JerseyChip primary={piece.primary} secondary={piece.secondary} accent={piece.accent} crest={piece.title.slice(0,3).toUpperCase()} num={piece.num} pattern={piece.pattern} />
-          {/* gold frame */}
-          <div style={{ position: 'absolute', inset: -14, border: '1px solid var(--accent)', pointerEvents: 'none', opacity: 0.45 }} />
-          <div style={{ position: 'absolute', inset: -22, border: '1px solid var(--accent)', pointerEvents: 'none', opacity: 0.2 }} />
-        </div>
+    </div>
+  );
+}
+function Panel({ title, hint, children }) {
+  return (
+    <div style={{ background: 'var(--bg-2)', padding: '20px 22px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 16, paddingBottom: 12, borderBottom: '1px dashed var(--line)' }}>
+        <span style={{ font: '700 11px/1 var(--font-mono)', color: 'var(--accent)', letterSpacing: '0.16em' }}>{title}</span>
+        {hint && <span style={{ font: '500 10px/1 var(--font-mono)', color: 'var(--muted)', letterSpacing: '0.08em' }}>{hint}</span>}
       </div>
-    </article>
+      {children}
+    </div>
+  );
+}
+function ColorField({ label, value, onChange }) {
+  return (
+    <label style={{ display: 'block', flex: 1, cursor: 'pointer' }}>
+      <div className="text-micro" style={{ color: 'var(--muted)', marginBottom: 6 }}>{label}</div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, border: '1px solid var(--line)', padding: '6px 10px', background: 'var(--bg)' }}>
+        <input
+          type="color"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          style={{ width: 28, height: 28, border: 0, padding: 0, background: 'transparent', cursor: 'pointer' }}
+        />
+        <span style={{ font: '600 12px/1 var(--font-mono)', letterSpacing: '0.04em' }}>{value.toUpperCase()}</span>
+      </div>
+    </label>
+  );
+}
+function LabInput({ label, value, onChange, maxLength }) {
+  return (
+    <label style={{ display: 'block' }}>
+      <div className="text-micro" style={{ color: 'var(--muted)', marginBottom: 6 }}>{label}</div>
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        maxLength={maxLength}
+        style={{
+          width: '100%', padding: '10px 12px',
+          background: 'var(--bg)', border: '1px solid var(--line)',
+          font: '700 14px/1 var(--font-mono)', letterSpacing: '0.04em',
+          color: 'var(--text)',
+        }}
+      />
+    </label>
+  );
+}
+function SummaryRow({ lbl, val, swatch }) {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <span style={{ color: 'var(--muted)' }}>{lbl}</span>
+      <span style={{ color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 6 }}>
+        {swatch && <span style={{ display: 'inline-block', width: 12, height: 12, background: swatch, border: '1px solid var(--line-2)' }} />}
+        {val}
+      </span>
+    </div>
+  );
+}
+function PreviewSpec({ lbl, val }) {
+  return (
+    <div style={{ padding: '14px 18px', borderRight: '1px solid var(--line)', textAlign: 'center' }}>
+      <div className="text-micro" style={{ color: 'var(--muted)', marginBottom: 4 }}>{lbl}</div>
+      <div style={{ font: '700 12px/1 var(--font-mono)', color: 'var(--accent)' }}>{val}</div>
+    </div>
   );
 }
 
-/* ─────────────────────────── Certificate preview ─────────────────────── */
-function CertificatePreview() {
+/* ─────────────────────────── Template glyph ─────────────────────────── */
+function TemplateGlyph({ id }) {
+  const stroke = 'currentColor';
+  return (
+    <svg width="36" height="40" viewBox="0 0 36 40" fill="none">
+      <path d="M3 6 L9 4 Q18 8 27 4 L33 6 L36 12 L33 14 L33 36 Q18 39 3 36 L3 14 L0 12 Z" stroke={stroke} strokeWidth="1" />
+      {id === 'stripes' && <g stroke={stroke} strokeWidth="1" opacity="0.7">
+        <line x1="10" y1="6" x2="10" y2="36" />
+        <line x1="18" y1="6" x2="18" y2="36" />
+        <line x1="26" y1="6" x2="26" y2="36" />
+      </g>}
+      {id === 'split' && <path d="M18 6 L18 36" stroke={stroke} strokeWidth="1.4" />}
+      {id === 'modern' && <path d="M14 4 L18 8 L22 4" stroke={stroke} strokeWidth="1" />}
+    </svg>
+  );
+}
+
+/* ─────────────────────────── LabJersey — central preview ────────────── */
+// Reuses the global JerseyArt component so placement matches product chips
+// and PDP hero exactly. The builder owns template→pattern mapping and the
+// build-tag corner labels overlaid on top of the SVG.
+function LabJersey({ template, primary, secondary, name, num, crest, view, rot }) {
+  const pattern = template === 'stripes' ? 'stripes-v'
+                : template === 'split'   ? 'half'
+                : template === 'modern'  ? 'sash'
+                : 'plain';
+
   return (
     <div style={{
       position: 'relative',
-      background: 'linear-gradient(135deg, #1a0f04 0%, #0d0904 100%)',
-      border: '1px solid var(--accent)',
-      padding: 'clamp(40px, 5vw, 64px)',
-      minHeight: 480,
+      width: 'min(380px, 78%)',
+      filter: 'drop-shadow(0 30px 60px rgba(0,240,255,0.10))',
     }}>
-      <div style={{ position: 'absolute', inset: 12, border: '1px solid var(--accent)', opacity: 0.35, pointerEvents: 'none' }} />
+      <JerseyArt
+        primary={primary}
+        secondary={secondary}
+        accent="#ffffff"
+        pattern={pattern}
+        view={view}
+        crest={crest || 'KB'}
+        num={num || (view === 'back' ? '10' : null)}
+        name={name || 'SİZ'}
+        brandTag="// KB.LAB"
+      />
 
-      {/* header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 36 }}>
-        <div>
-          <div className="text-micro" style={{ color: 'var(--accent)', marginBottom: 4 }}>MAISON KB · SERTİFİKA</div>
-          <div style={{ font: '600 11px/1.4 var(--font-mono)', color: 'var(--muted)' }}>CERTIFICATE OF AUTHENTICITY</div>
-        </div>
-        <svg width="56" height="56" viewBox="0 0 60 60">
-          <circle cx="30" cy="30" r="28" fill="none" stroke="var(--accent)" strokeWidth="0.8" />
-          <text x="30" y="36" textAnchor="middle" fontFamily="Playfair Display" fontWeight="800" fontSize="20" fill="var(--accent)">KB</text>
-        </svg>
-      </div>
-
-      <h3 style={{ font: 'italic 700 clamp(38px, 4vw, 56px)/1 var(--font-display)', color: 'var(--text)', margin: 0, letterSpacing: '-0.03em' }}>Maradona '86</h3>
-      <div style={{ font: '600 14px/1 var(--font-mono)', color: 'var(--accent)', letterSpacing: '0.16em', marginTop: 10 }}>YARI FİNAL · 22.06.1986 · MÉXICO</div>
-
-      <div style={{ marginTop: 40, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
-        <CertField lbl="NÜSHA" val="N° 03 / 12" />
-        <CertField lbl="ATÖLYE" val="LEVENT, IST" />
-        <CertField lbl="KUMAŞ" val="JAKAR · ITA" />
-        <CertField lbl="USTA" val="K. BERKANT" />
-        <CertField lbl="TARİH" val="2026 · 05 · 18" />
-        <CertField lbl="SAHİP" val="________________" />
-      </div>
-
-      <div style={{ marginTop: 40, paddingTop: 24, borderTop: '1px solid var(--accent)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-        <div>
-          <svg width="120" height="40" viewBox="0 0 120 40">
-            <path d="M5 30 Q15 8 30 22 Q40 32 50 18 Q60 4 75 24 Q85 36 100 18 Q110 8 115 22" fill="none" stroke="var(--accent)" strokeWidth="1.4" strokeLinecap="round" />
-          </svg>
-          <div className="text-micro muted" style={{ marginTop: 4, color: 'var(--accent)' }}>K. BERKANT · USTA</div>
-        </div>
-        <div style={{ textAlign: 'right' }}>
-          <div className="text-micro" style={{ color: 'var(--muted)' }}>QR · DOĞRULAMA</div>
-          <div style={{ display: 'inline-grid', gridTemplateColumns: 'repeat(7, 6px)', gridTemplateRows: 'repeat(7, 6px)', gap: 1, marginTop: 6 }}>
-            {Array.from({length: 49}, (_, i) => (
-              <div key={i} style={{ background: (i*7 + i % 3 === 0 || i % 5 === 0) ? 'var(--accent)' : 'transparent', width: 6, height: 6 }} />
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-function CertField({ lbl, val }) {
-  return (
-    <div>
-      <div className="text-micro" style={{ color: 'var(--muted)', marginBottom: 4 }}>{lbl}</div>
-      <div style={{ font: '600 14px/1.2 var(--font-mono)', color: 'var(--accent)', letterSpacing: '0.04em' }}>{val}</div>
+      {/* HUD blueprint corners overlaid OUTSIDE the SVG so they don't crowd
+          the jersey artwork itself. */}
+      <span style={{ position: 'absolute', top: -2, left: -2, font: '600 9px/1 var(--font-mono)', letterSpacing: '0.18em', color: 'var(--accent)' }}>
+        // KB.LAB
+      </span>
+      <span style={{ position: 'absolute', top: -2, right: -2, font: '600 9px/1 var(--font-mono)', letterSpacing: '0.18em', color: 'var(--accent-2)' }}>
+        BUILD · LIVE
+      </span>
+      <span style={{ position: 'absolute', bottom: -2, left: -2, font: '600 9px/1 var(--font-mono)', letterSpacing: '0.18em', color: 'var(--muted)' }}>
+        VIEW · {view === 'front' ? 'ÖN' : 'ARKA'}
+      </span>
+      <span style={{ position: 'absolute', bottom: -2, right: -2, font: '600 9px/1 var(--font-mono)', letterSpacing: '0.18em', color: 'var(--muted)' }}>
+        {template.toUpperCase()} · {pattern.toUpperCase()}
+      </span>
     </div>
   );
 }
 
-Object.assign(window, { ClassicPage });
+Object.assign(window, { BuilderPage });
